@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+
+# macOS
+.DS_Store
+._*
+
+# pytest
+.pytest_cache/
+
+# IDE
+.vscode/
+.idea/
+.VSCodeCounter
+.editorconfig
+
+# Scratch Work
+scratch/
+.swp

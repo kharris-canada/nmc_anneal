@@ -1,0 +1,36 @@
+# Lattice
+width = 40 
+n_layers = 8 
+
+#Li layer Composition
+li_fraction_li_layer = 1.00
+mn_fraction_li_layer = 0.00
+ni2_fraction_li_layer=0.0
+ni3_fraction_li_layer=0.0
+vac_fraction_li_layer=0.0
+
+# TM layer Composition
+li_fraction_tm_layer=0.
+mn_fraction_tm_layer=0.3333
+ni2_fraction_tm_layer=0.3333
+ni3_fraction_tm_layer=0.
+co_fraction_tm_layer=0.3333
+vac_fraction_tm_layer=0.0
+
+#Lattice initialization by annealing TM layer
+initialize_anneal_steps = 1e5 
+initialize_anneal_hot_temp = 0.2 
+initialize_anneal_cold_temp = 0.06
+
+# Electrochemistry
+delithiation_steps = 1.5e3 
+delithiation_fraction_to_remove = 0.20 
+oxidation_model = ni_2to4
+
+#Lattice mid-delithiation annealing
+mid_delithiation_anneal_steps=1e4
+mid_delithiation_anneal_hot_temp=0.0
+mid_delithiation_anneal_cold_temp=0.0
+
+# Output
+output_file = lattice_final.npy
