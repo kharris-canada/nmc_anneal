@@ -125,19 +125,19 @@ def _slice_up_lattice(
 
     # Set number of steps and temperature parameters for annealing
     if anneal_type == "Initialize TM":
-        n_steps = config.initialize_anneal_steps / config.n_layers
+        n_steps = int(config.initialize_anneal_steps / config.n_layers)
         sim_temp_hot = config.initialize_anneal_hot_temp
         sim_temp_cold = config.initialize_anneal_cold_temp
 
     elif anneal_type == "Anneal Li":
-        n_steps = config.mid_delithiation_anneal_steps / config.n_layers
+        n_steps = int(config.mid_delithiation_anneal_steps / config.n_layers)
         sim_temp_hot = config.mid_delithiation_anneal_hot_temp
         sim_temp_cold = config.mid_delithiation_anneal_cold_temp
 
     elif anneal_type == "TM Convergence Check" or anneal_type == "Li Convergence Check":
         # extra error checking only on this one since others checked at inpyt file load time
         try:
-            n_steps = config.curr_conv_check_n_steps / config.n_layers
+            n_steps = int(config.curr_conv_check_n_steps / config.n_layers)
             sim_temp_hot = config.curr_conv_check_hot_temp
             sim_temp_cold = config.curr_conv_check_cold_temp
         except ValueError as exc:

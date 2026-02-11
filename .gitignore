@@ -22,3 +22,5 @@ build/
 # Scratch Work
 scratch/
 .swp
+defunct/
+examples/*.png

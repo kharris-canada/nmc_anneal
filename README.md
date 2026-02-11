@@ -134,4 +134,10 @@ Therefore, the total energy equation is the average of all the oxygen atoms in t
 
 Index shifts for nearest-neighbor oxygen atoms are coded explicitly in energy_calculations.py. Index shifts for the nearest-neighbor metals within a layer or in the layer above and below (those sharing an oxygen atom) are explicitly coded in charging_methods.py.
 
+## Planned Features
+
+### Analysis methods:
+- More oxidation methods
+- Pair distribution functions (from diffraction data)
+- <sup>7</sup>Li magic-angle spinning solid-state NMR spectroscopy
 

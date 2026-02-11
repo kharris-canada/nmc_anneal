@@ -34,7 +34,6 @@ def test_ideal_struct(tmp_path: Path) -> None:
 
     # Electrochemistry
     delithiation_steps = 10
-    delithiation_fraction_to_remove = 0.20
     oxidation_model = ni_2to4
 
     #Lattice mid-delithiation annealing
@@ -107,7 +106,6 @@ def test_specific_random_struct(tmp_path: Path) -> None:
 
     # Electrochemistry
     delithiation_steps = 10
-    delithiation_fraction_to_remove = 0.20
     oxidation_model = ni_2to4
 
     #Lattice mid-delithiation annealing

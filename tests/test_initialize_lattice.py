@@ -25,7 +25,6 @@ def test_populate_lattice_species_and_charges():
         initialize_anneal_hot_temp=10,
         initialize_anneal_cold_temp=1,
         delithiation_steps=1,
-        delithiation_fraction_to_remove=0.1,
         oxidation_model="ni_2to4",
         mid_delithiation_anneal_steps=1.5e3,
         mid_delithiation_anneal_hot_temp=0.0,

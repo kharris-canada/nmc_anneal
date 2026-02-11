@@ -68,9 +68,6 @@ def _build_config(values: Dict[str, str]) -> SimulationConfig:
             initialize_anneal_cold_temp=float(values["initialize_anneal_cold_temp"]),
             # Electrochemistry
             delithiation_steps=int(float(values["delithiation_steps"])),
-            delithiation_fraction_to_remove=float(
-                values["delithiation_fraction_to_remove"]
-            ),
             oxidation_model=values["oxidation_model"],
             # Lattice mid-delithiation annealing
             mid_delithiation_anneal_steps=int(
@@ -182,9 +179,6 @@ def _validate_composition(config: SimulationConfig) -> None:
 def _validate_electrochemistry(config: SimulationConfig) -> None:
     if config.delithiation_steps <= 0:
         raise ValueError("delithiation_steps must be a positive integer")
-
-    if not (0.0 <= config.delithiation_fraction_to_remove <= 1.0):
-        raise ValueError("delithiation_fraction_to_remove must be between 0 and 1.0")
 
     allowed_models = {
         "ni_2to4",

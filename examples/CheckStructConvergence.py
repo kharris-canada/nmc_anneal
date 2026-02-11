@@ -5,7 +5,7 @@ import nmc_anneal as nmc
 
 def main() -> None:
     # Load stoichiometry and simulation parameters from file
-    config = nmc.parse_input_file(Path("examples/ex1_input.txt"))
+    config = nmc.parse_input_file(Path("examples/ex1_parameters.txt"))
 
     # Generate lattice of charges and equivalent lattice of atomic names with randomized positions
     whole_lattice_species, whole_lattice_charges = nmc.initialize_lattice(config)

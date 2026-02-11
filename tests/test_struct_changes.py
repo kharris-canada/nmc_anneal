@@ -33,7 +33,6 @@ def test_specific_random_struct(tmp_path: Path) -> None:
 
     # Electrochemistry
     delithiation_steps = 10
-    delithiation_fraction_to_remove = 0.20
     oxidation_model = ni_2to4
 
     #Lattice mid-delithiation annealing
@@ -95,7 +94,6 @@ def test_specific_random_struct(tmp_path: Path) -> None:
 
     # Electrochemistry
     delithiation_steps = 10
-    delithiation_fraction_to_remove = 0.20
     oxidation_model = ni_2to4
 
     #Lattice mid-delithiation annealing
@@ -115,7 +113,7 @@ def test_specific_random_struct(tmp_path: Path) -> None:
 
     whole_lattice_species, whole_lattice_charges = nmc.initialize_lattice(config)
 
-    nmc.delithiate(config, whole_lattice_charges, whole_lattice_species, 100)
+    nmc.delithiate(config, whole_lattice_charges, whole_lattice_species, 0.1)
 
     total_charge = whole_lattice_charges.sum()
     tot_num_metals = config.width * config.width * config.n_layers * 2

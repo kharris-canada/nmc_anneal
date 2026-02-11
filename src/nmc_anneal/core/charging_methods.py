@@ -10,7 +10,7 @@ def delithiate(
     config: SimulationConfig,
     whole_lattice_charges: np.ndarray,
     whole_lattice_species: np.ndarray,
-    num_li_to_remove: int,
+    frac_li_to_remove: float,
 ):
     """
     Remove the number of lithium atoms specified
@@ -30,6 +30,10 @@ def delithiate(
     :param num_li_to_remove: The number of lithium atoms to remove (specific count, not fraction or empirical formula terms)
     :type num_li_to_remove: int
     """
+    # Convert fraction of Li to remove to integer number to remove
+    # (while forcing to be even number in case methods require one TM per two Li)
+    num_li_atoms = config.n_layers * config.width * config.width
+    num_li_to_remove = int(np.ceil(num_li_atoms * frac_li_to_remove / 2) * 2)
 
     # This model oxidizes ni2+ straight to ni4+, while removing two Li for each ni oxidation
     # start by building lists of oxidation energy at the current configuration
