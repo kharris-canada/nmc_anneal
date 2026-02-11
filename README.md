@@ -52,6 +52,8 @@ mid_delithiation_anneal_cold_temp=0.0
 # Output
 output_file = lattice_final.npy
 ```
+ <br />
+ <br />
  
  #### Example initialization and annealing
 An initial random structure can be generated with the initialize_lattice() function at the stoichiometry defined in an input text file, and those random TM positions can then be annealed.
@@ -76,6 +78,8 @@ nmc.anneal_3Dlattice(
         graph_energy=False,
     )
 ```
+<br />
+<br />
 
 #### Checking for convergence
 The number of steps required depends on the atoms present as well as the size of lattice chosen. To get some insight into when the simulation has reached ergodicity, use the convergence plotting tool to trace the average energy of the system vs the number of steps in the simulation.
@@ -95,6 +99,8 @@ The number of steps required depends on the atoms present as well as the size of
 ```
 Results:
 ![Convergence VS Stepsize](docs/images/energy_convergence.png)
+<br />
+<br />
 #### Observing phase transitions
 Since the real world versions of these materials are generally quickly quenched from their high synthesis temperature, one is generally interested in tracking the behavior at different levels of disorder. It can be useful to generate a phase diagram with:
 ```python
@@ -112,18 +118,28 @@ Since the real world versions of these materials are generally quickly quenched 
 ```
 Results:
 ![Phase Transition](docs/images/phase_diagram.png)
+
+
+<br />
+<br />
+
 ## Implementation Details and Structure Conventions
 
 The chemical structure of layered NMC cathodes consists of alternating 2D sheets of transition metals alternating with 2D sheets of lithium atoms. These metal layers are separated by oxygen sheets. The oxygen sheets do not change in any across different stoichiometries or charge levels, so these are not represented internally. Calculations instead refer to virtual oxygen layers with the same structure for book-keeping purposes.
+
 
 The structure is represented internally as a stack of 2D arrays. Layer 0 is lithium, layer 1 transition metal, and so on.  This stack is stored as a 3D NumPy array with the 0th axis being the stacking axis. To speed up math on the charge checks while also tracking any cases where multiple metals have the same charge, a dual array is used. One with the atomic charges and one with the names of the ions.
 
 Ignoring vacancies and mixtures of TMs, the structure of these lattices is a simple FCC closest packing of spheres (see https://en.wikipedia.org/wiki/Close-packing_of_equal_spheres). In FCC, the layers stack with a repeating ABC, ABC, ABC, etc. order with, with each layer is shifted over 0.5 units along both the *a* and *b* directions (∠ *a*,*b* = 60 °). The third layer is shifted the same amount/direction. The first three layers therefore look like:
 
 ![Layer Stacking](docs/images/Layer_Stacking.png)
+<br />
 
 The shift from the third layer to the fourth layer is such that the atomic positions overlay exactly with the positions of layer one. However, the code here uses the convention that the fourth layer of the periodic cell is diagonally shifted from layer one.  Therefore the bottom left atom of every layer depicted above is at index (L, a=0, b=0). Geometrically, index 0,0 of layer 1 is shifted +1*a*, +1*b* from the atom at index 0,0 of layer 0. This choice of unit cell means that every layer in a large stack are connected to the layers above/below in the exact same way, and nearest-neighbor calculations are very easily made periodic with modular arithmetic.  While the structure is stored as a 3D Numpy array that looks square, it represents a tilted parallelogram:
  ![Full 3D Stacking](docs/images/3Dlattice.png)
+ 
+ <br />
+ <br />
 
 The oxygen layers are chemically immutable, so there is no need to store them. However, bookkeeping requires a convention to refer to them for calculating nearest neighbors. Here, we use as a convention that oxygen-layer-0 is *between* metal-layer-0 (lithium layer) and metal-layer-1 (TM layer); i.e., oxygen layer 0 is physically between the metal layers desribed by [0,:,:] and [1,:,:] of the NumPy array. This means that every metal layer at vertical index *l* is sandwiched between oxygen layers with index (*l*-1) and (*l*), subject to periodicity when needed.
 
@@ -139,5 +155,4 @@ Index shifts for nearest-neighbor oxygen atoms are coded explicitly in energy_ca
 ### Analysis methods:
 - More oxidation methods
 - Pair distribution functions (from diffraction data)
-- <sup>7</sup>Li magic-angle spinning solid-state NMR spectroscopy
 
