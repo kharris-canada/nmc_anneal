@@ -30,18 +30,25 @@ def delithiate(
     :param num_li_to_remove: The number of lithium atoms to remove (specific count, not fraction or empirical formula terms)
     :type num_li_to_remove: int
     """
+
     # Convert fraction of Li to remove to integer number to remove
     # (while forcing to be even number in case methods require one TM per two Li)
-    num_li_atoms = config.n_layers * config.width * config.width
-    num_li_to_remove = int(np.ceil(num_li_atoms * frac_li_to_remove / 2) * 2)
+    start_num_li = np.count_nonzero(whole_lattice_species == "Li")
+    num_li_to_remove = int(np.ceil(start_num_li * frac_li_to_remove / 2) * 2)
 
-    # This model oxidizes ni2+ straight to ni4+, while removing two Li for each ni oxidation
+    if num_li_to_remove > start_num_li:
+        raise ValueError(
+            f"Not enough Li atoms for requested amount of redox. Requested {num_li_to_remove} but only {start_num_li} Li are present"
+        )
+
+    # This model oxidizes ni2+ straight to ni4+, while removing two Li for each Ni oxidation
     # start by building lists of oxidation energy at the current configuration
-    if config.oxidation_model == "ni_2to4":
+    if config.oxidation_model == "ni_2to4_co_3to4":
         original_charge = 2
         redox_charge = 4
         energies_2plus = _get_energy_list(
             whole_lattice_charges,
+            whole_lattice_species,
             original_charge,
             redox_charge,
             range(1, 2 * config.n_layers),
@@ -51,23 +58,29 @@ def delithiate(
         redox_charge = 0
         energies_1plus = _get_energy_list(
             whole_lattice_charges,
+            whole_lattice_species,
             original_charge,
             redox_charge,
             range(0, 2 * config.n_layers),
         )
 
         # Stoichiometry calculations:
-        current_num_li = np.sum(
-            whole_lattice_charges[0 : 2 * len(whole_lattice_charges) : 2] == 1
-        )
-        current_num_ni2 = np.sum(
-            whole_lattice_charges[1 : 2 * len(whole_lattice_charges + 1) : 2] == 2
-        )
+        start_num_ni2 = np.count_nonzero(whole_lattice_species == "Ni2+")
+
+        start_num_co3 = np.count_nonzero(whole_lattice_species == "Co3+")
+
         num_ni2_to_ni4 = int(num_li_to_remove / 2)
 
-        if num_ni2_to_ni4 > current_num_ni2 or num_li_to_remove > current_num_li:
+        if (num_li_to_remove / 2) > start_num_ni2:
+            num_ni2_to_ni4 = start_num_ni2
+            num_co3_to_co4 = num_li_to_remove - (start_num_ni2 * 2)
+        else:
+            num_ni2_to_ni4 = int(num_li_to_remove / 2)
+            num_co3_to_co4 = 0
+
+        if num_co3_to_co4 > start_num_co3:
             raise ValueError(
-                f"Not enough Li or Ni atoms for requested amount of redox. Requested {num_li_to_remove} Li removed and {num_ni2_to_ni4} Ni2 reduced, whereas {current_num_li} Li and {current_num_ni2 } Ni2 are present"
+                f"Not enough Ni atoms + Co atoms for requested amount of redox. Requested {num_ni2_to_ni4} Ni2 and {num_co3_to_co4} Co3 atoms oxidized, whereas {start_num_ni2} Ni2 and {start_num_co3 } Co3 are present"
             )
 
         for step in range(0, num_ni2_to_ni4):
@@ -97,11 +110,347 @@ def delithiate(
                     redox_ending_charge=0,
                     redox_ending_name="Vac",
                     list_to_update=energies_2plus,
-                    update_list_redox_starting_charge=4,
-                    update_list_redox_ending_charge=2,
+                    update_list_redox_starting_charge=2,
+                    update_list_redox_ending_charge=4,
                 )
 
             energies_2plus.sort(key=lambda row: row[3], reverse=True)
+            energies_1plus.sort(key=lambda row: row[3], reverse=True)
+
+        # Now switching to oxidizing Co3+ -> 4+
+        original_charge = 3
+        redox_charge = 4
+        energies_3plus = _get_energy_list(
+            whole_lattice_charges,
+            whole_lattice_species,
+            original_charge,
+            redox_charge,
+            range(1, 2 * config.n_layers),
+        )
+
+        co_energies_3plus = [row for row in energies_3plus if row[-1] == "Co3+"]
+
+        for step in range(0, num_co3_to_co4):
+
+            # oxidize Co3+ to Co4+ and update energies of all Co3+ and Li sites
+            _redox_and_update2lists(
+                whole_lattice_charges,
+                whole_lattice_species,
+                list_to_oxidize=co_energies_3plus,
+                redox_starting_charge=3,
+                redox_ending_charge=4,
+                redox_ending_name="Co4+",
+                list_to_update=energies_1plus,
+                update_list_redox_starting_charge=1,
+                update_list_redox_ending_charge=0,
+            )
+
+            # remove one Li atom to charge balance and update Li and Co3+ oxidation energy lists
+            _redox_and_update2lists(
+                whole_lattice_charges,
+                whole_lattice_species,
+                list_to_oxidize=energies_1plus,
+                redox_starting_charge=1,
+                redox_ending_charge=0,
+                redox_ending_name="Vac",
+                list_to_update=co_energies_3plus,
+                update_list_redox_starting_charge=3,
+                update_list_redox_ending_charge=4,
+            )
+
+            co_energies_3plus.sort(key=lambda row: row[3], reverse=True)
+            energies_1plus.sort(key=lambda row: row[3], reverse=True)
+
+    #
+    # This model oxidizes Ni2+ to Ni4+ in two steps, then oxidizes Co3+ to Co4+
+    # (1) oxidizes Ni2+ to Ni3+ while removing one Li in each Ni oxidation step
+    # (2) only after all converted to Ni3+, oxidizes Ni3+ to Ni4+, removing one Li in each Ni oxidation step
+    # (3) only after all Ni2+ converted to Ni4+, begin converting Co3+ to Co4+
+    if config.oxidation_model == "ni_2to3_ni_3to4_co_3to4":
+
+        # Stoichiometry calculations:
+        start_num_ni2 = np.count_nonzero(whole_lattice_species == "Ni2+")
+        start_num_co3 = np.count_nonzero(whole_lattice_species == "Co3+")
+
+        if num_li_to_remove <= start_num_ni2:
+            num_ni2_to_ni3 = num_li_to_remove
+            num_ni3_to_ni4 = 0
+            num_co3_to_co4 = 0
+
+        elif num_li_to_remove <= 2 * start_num_ni2:
+            num_ni2_to_ni3 = start_num_ni2
+            num_ni3_to_ni4 = num_li_to_remove - start_num_ni2
+            num_co3_to_co4 = 0
+
+        else:
+            num_ni2_to_ni3 = start_num_ni2
+            num_ni3_to_ni4 = start_num_ni2
+            num_co3_to_co4 = num_li_to_remove - 2 * start_num_ni2
+
+        if num_co3_to_co4 > start_num_co3:
+            raise ValueError(
+                f"Not enough Ni atoms + Co atoms for requested amount of redox. Requested {num_ni2_to_ni3} Ni2 and {num_co3_to_co4} Co3 atoms oxidized, whereas {start_num_ni2} Ni2 and {start_num_co3 } Co3 are present"
+            )
+
+        original_charge = 2
+        redox_charge = 3
+        energies_2plus = _get_energy_list(
+            whole_lattice_charges,
+            whole_lattice_species,
+            original_charge,
+            redox_charge,
+            range(1, 2 * config.n_layers),
+        )
+
+        original_charge = 1
+        redox_charge = 0
+        energies_1plus = _get_energy_list(
+            whole_lattice_charges,
+            whole_lattice_species,
+            original_charge,
+            redox_charge,
+            range(0, 2 * config.n_layers),
+        )
+
+        for step in range(0, num_ni2_to_ni3):
+
+            # oxidize Ni2+ to Ni3+ and update energies of all Ni2+ and Li sites
+            _redox_and_update2lists(
+                whole_lattice_charges,
+                whole_lattice_species,
+                list_to_oxidize=energies_2plus,
+                redox_starting_charge=2,
+                redox_ending_charge=3,
+                redox_ending_name="Ni3+",
+                list_to_update=energies_1plus,
+                update_list_redox_starting_charge=1,
+                update_list_redox_ending_charge=0,
+            )
+
+            # remove one Li atom to charge balance and update Li and Ni2+ oxidation energy lists
+            _redox_and_update2lists(
+                whole_lattice_charges,
+                whole_lattice_species,
+                list_to_oxidize=energies_1plus,
+                redox_starting_charge=1,
+                redox_ending_charge=0,
+                redox_ending_name="Vac",
+                list_to_update=energies_2plus,
+                update_list_redox_starting_charge=2,
+                update_list_redox_ending_charge=3,
+            )
+
+            energies_2plus.sort(key=lambda row: row[3], reverse=True)
+            energies_1plus.sort(key=lambda row: row[3], reverse=True)
+
+        # Now switching to oxidizing Ni3+ -> 4+
+        original_charge = 3
+        redox_charge = 4
+        energies_3plus = _get_energy_list(
+            whole_lattice_charges,
+            whole_lattice_species,
+            original_charge,
+            redox_charge,
+            range(1, 2 * config.n_layers),
+        )
+
+        ni_energies_3plus = [row for row in energies_3plus if row[-1] == "Ni3+"]
+
+        for step in range(0, num_ni3_to_ni4):
+
+            # oxidize Ni3+ to Ni4+ and update energies of all Ni3+ and Li sites
+            _redox_and_update2lists(
+                whole_lattice_charges,
+                whole_lattice_species,
+                list_to_oxidize=ni_energies_3plus,
+                redox_starting_charge=3,
+                redox_ending_charge=4,
+                redox_ending_name="Ni4+",
+                list_to_update=energies_1plus,
+                update_list_redox_starting_charge=1,
+                update_list_redox_ending_charge=0,
+            )
+
+            # remove one Li atom to charge balance and update Li and Ni3+ oxidation energy lists
+            _redox_and_update2lists(
+                whole_lattice_charges,
+                whole_lattice_species,
+                list_to_oxidize=energies_1plus,
+                redox_starting_charge=1,
+                redox_ending_charge=0,
+                redox_ending_name="Vac",
+                list_to_update=ni_energies_3plus,
+                update_list_redox_starting_charge=3,
+                update_list_redox_ending_charge=4,
+            )
+
+            ni_energies_3plus.sort(key=lambda row: row[3], reverse=True)
+            energies_1plus.sort(key=lambda row: row[3], reverse=True)
+
+        # Now switching to oxidizing Co3+ -> 4+
+        original_charge = 3
+        redox_charge = 4
+        energies_3plus = _get_energy_list(
+            whole_lattice_charges,
+            whole_lattice_species,
+            original_charge,
+            redox_charge,
+            range(1, 2 * config.n_layers),
+        )
+
+        co_energies_3plus = [row for row in energies_3plus if row[-1] == "Co3+"]
+
+        for step in range(0, num_co3_to_co4):
+
+            # oxidize Co3+ to Co4+ and update energies of all Co3+ and Li sites
+            _redox_and_update2lists(
+                whole_lattice_charges,
+                whole_lattice_species,
+                list_to_oxidize=co_energies_3plus,
+                redox_starting_charge=3,
+                redox_ending_charge=4,
+                redox_ending_name="Co4+",
+                list_to_update=energies_1plus,
+                update_list_redox_starting_charge=1,
+                update_list_redox_ending_charge=0,
+            )
+
+            # remove one Li atom to charge balance and update Li and Co3+ oxidation energy lists
+            _redox_and_update2lists(
+                whole_lattice_charges,
+                whole_lattice_species,
+                list_to_oxidize=energies_1plus,
+                redox_starting_charge=1,
+                redox_ending_charge=0,
+                redox_ending_name="Vac",
+                list_to_update=co_energies_3plus,
+                update_list_redox_starting_charge=3,
+                update_list_redox_ending_charge=4,
+            )
+
+            co_energies_3plus.sort(key=lambda row: row[3], reverse=True)
+            energies_1plus.sort(key=lambda row: row[3], reverse=True)
+
+    #
+    # This model oxidizes in two distinct steps involving Ni and Co
+    # (1) oxidizes Ni2+ to Ni3+ while removing one Li in each Ni oxidation step
+    # (2) only after all converted to Ni3+, oxidizes EITHER Ni3+ to Ni4+ or Co3+ to Co4+ (by oxygen energy), removing one Li in each Ni oxidation step
+    if config.oxidation_model == "ni_2to3_any_3to4":
+        original_charge = 2
+        redox_charge = 3
+        energies_2plus = _get_energy_list(
+            whole_lattice_charges,
+            whole_lattice_species,
+            original_charge,
+            redox_charge,
+            range(1, 2 * config.n_layers),
+        )
+
+        original_charge = 1
+        redox_charge = 0
+        energies_1plus = _get_energy_list(
+            whole_lattice_charges,
+            whole_lattice_species,
+            original_charge,
+            redox_charge,
+            range(0, 2 * config.n_layers),
+        )
+
+        # Stoichiometry calculations:
+        start_num_ni2 = np.count_nonzero(whole_lattice_species == "Ni2+")
+
+        start_num_co3 = np.count_nonzero(whole_lattice_species == "Co3+")
+
+        num_ni2_to_ni3 = np.minimum(num_li_to_remove, start_num_ni2)
+
+        if num_ni2_to_ni3 > start_num_ni2 or num_li_to_remove > start_num_li:
+            raise ValueError(
+                f"Not enough Li or Ni atoms for requested amount of redox. Requested {num_li_to_remove} Li removed and {num_ni2_to_ni3} Ni2 oxidized, whereas {start_num_li} Li and {start_num_ni2 } Ni2 are present"
+            )
+
+        # One lithium removed per Ni2 -> Ni3 event, so remainder is:
+        num_li_to_remove_stage2 = num_li_to_remove - num_ni2_to_ni3
+
+        if num_li_to_remove_stage2 > (start_num_ni2 + start_num_co3):
+            raise ValueError(
+                f"Not enough Ni + Co atoms for the second redox stage of Ni3+ -> Ni4+ / Co3+ to Co4+ to equate to the Li removal requested."
+            )
+
+        for step in range(0, num_ni2_to_ni3):
+
+            # oxidize Ni2+ to Ni3+ and update energies of all 2+Ni and Li sites
+            # chooses lowest energy site (or randomly selects between several if equal energies)
+            _redox_and_update2lists(
+                whole_lattice_charges,
+                whole_lattice_species,
+                list_to_oxidize=energies_2plus,
+                redox_starting_charge=2,
+                redox_ending_charge=3,
+                redox_ending_name="Ni3+",
+                list_to_update=energies_1plus,
+                update_list_redox_starting_charge=1,
+                update_list_redox_ending_charge=0,
+            )
+
+            # remove the two Li atoms to charge balance and update Li and Ni2+ oxidation energy lists
+            # chooses lowest energy site (or randomly selects between several if equal energies)
+            _redox_and_update2lists(
+                whole_lattice_charges,
+                whole_lattice_species,
+                list_to_oxidize=energies_1plus,
+                redox_starting_charge=1,
+                redox_ending_charge=0,
+                redox_ending_name="Vac",
+                list_to_update=energies_2plus,
+                update_list_redox_starting_charge=2,
+                update_list_redox_ending_charge=3,
+            )
+
+            energies_2plus.sort(key=lambda row: row[3], reverse=True)
+            energies_1plus.sort(key=lambda row: row[3], reverse=True)
+
+        # Now switching to oxidizing Ni3+ OR Co3+ -> 4+
+        original_charge = 3
+        redox_charge = 4
+        energies_3plus = _get_energy_list(
+            whole_lattice_charges,
+            whole_lattice_species,
+            original_charge,
+            redox_charge,
+            range(1, 2 * config.n_layers),
+        )
+
+        for step in range(0, num_li_to_remove_stage2):
+
+            # oxidize Ni2+ to Ni4+ and update energies of all 2+Ni and Li sites
+            # chooses lowest energy site (or randomly selects between several if equal energies)
+            _redox_and_update2lists(
+                whole_lattice_charges,
+                whole_lattice_species,
+                list_to_oxidize=energies_3plus,
+                redox_starting_charge=3,
+                redox_ending_charge=4,
+                redox_ending_name="Co4+ or Ni4+",
+                list_to_update=energies_1plus,
+                update_list_redox_starting_charge=1,
+                update_list_redox_ending_charge=0,
+            )
+
+            # remove the two Li atoms to charge balance and update Li and Ni2+ oxidation energy lists
+            # chooses lowest energy site (or randomly selects between several if equal energies)
+            _redox_and_update2lists(
+                whole_lattice_charges,
+                whole_lattice_species,
+                list_to_oxidize=energies_1plus,
+                redox_starting_charge=1,
+                redox_ending_charge=0,
+                redox_ending_name="Vac",
+                list_to_update=energies_3plus,
+                update_list_redox_starting_charge=3,
+                update_list_redox_ending_charge=4,
+            )
+
+            energies_3plus.sort(key=lambda row: row[3], reverse=True)
             energies_1plus.sort(key=lambda row: row[3], reverse=True)
 
     return
@@ -109,6 +458,7 @@ def delithiate(
 
 def _get_energy_list(
     whole_lattice_charges: np.ndarray,
+    whole_lattice_species: np.ndarray,
     charge_to_tabulate: int,
     proposed_new_charge: int,
     layers_to_tabulate: list,
@@ -146,7 +496,8 @@ def _get_energy_list(
                 whole_lattice_charges,
                 np.array([layer, x, y]),
             )
-            energies.append([layer, int(x), int(y), float(energy)])
+            atom_name = whole_lattice_species[layer, x, y]
+            energies.append([layer, int(x), int(y), float(energy), atom_name])
 
     energies.sort(key=lambda row: row[3], reverse=True)
     return energies
@@ -220,7 +571,16 @@ def _redox_and_update2lists(
     indices_of_removed = list_to_oxidize[list_row_to_remove][0:3]
 
     whole_lattice_charges[tuple(indices_of_removed)] = redox_ending_charge
+
+    # change name of ion in lattice of species, usually using function argument, but check if simultaneous Co3+/Ni3+
+    if redox_ending_name == "Co4+ or Ni4+":
+        redox_starting_name = whole_lattice_species[tuple(indices_of_removed)]
+        if redox_starting_name == "Ni3+":
+            redox_ending_name = "Ni4+"
+        if redox_starting_name == "Co3+":
+            redox_ending_name = "Co4+"
     whole_lattice_species[tuple(indices_of_removed)] = redox_ending_name
+
     del list_to_oxidize[list_row_to_remove]
 
     in_layer_idx_shfts = _get_neighbor_indices(
@@ -234,8 +594,6 @@ def _redox_and_update2lists(
         locations_to_check=in_layer_idx_shfts,
     )
 
-    redox_starting_charge = 1
-    redox_ending_charge = 0
     up_layer_idx_shfts = _get_neighbor_indices(
         "up layer", indices_of_removed, width, num_li_plus_tm_layers
     )

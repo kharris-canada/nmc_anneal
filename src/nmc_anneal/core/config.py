@@ -29,7 +29,6 @@ class SimulationConfig:
     initialize_anneal_cold_temp: float
 
     # Electrochemistry steps and atomic numbers as stoichiometry fractions between 0 and 1
-    delithiation_steps: float  # float for sci. notation, converted to int later
     oxidation_model: str
 
     # Lattice mid-delithiation annealing

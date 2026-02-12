@@ -33,8 +33,7 @@ def test_parse_valid_input(tmp_path: Path) -> None:
     initialize_anneal_cold_temp = 0.06
 
     # Electrochemistry
-    delithiation_steps = 10
-    oxidation_model = ni_2to4
+    oxidation_model = ni_2to4_co_3to4
 
     #Lattice mid-delithiation annealing
     mid_delithiation_anneal_steps=1e4
@@ -71,8 +70,7 @@ def test_parse_valid_input(tmp_path: Path) -> None:
     assert config.initialize_anneal_hot_temp == 0.2
     assert config.initialize_anneal_cold_temp == 0.06
 
-    assert config.delithiation_steps == 10
-    assert config.oxidation_model == "ni_2to4"
+    assert config.oxidation_model == "ni_2to4_co_3to4"
 
     assert config.mid_delithiation_anneal_steps == 1e4
     assert config.mid_delithiation_anneal_hot_temp == 0.0
@@ -108,7 +106,6 @@ def test_missing_required_key_raises_error(tmp_path: Path) -> None:
     initialize_anneal_cold_temp = 0.06
 
     # Electrochemistry
-    delithiation_steps = 10
     oxidation_model = ni_2to4
 
     #Lattice mid-delithiation annealing
@@ -155,8 +152,7 @@ def test_random_seed_optional(tmp_path: Path) -> None:
     initialize_anneal_cold_temp = 0.06
 
     # Electrochemistry
-    delithiation_steps = 10
-    oxidation_model = ni_2to4
+    oxidation_model = ni_2to4_co_3to4
 
     #Lattice mid-delithiation annealing
     mid_delithiation_anneal_steps=1e4
@@ -202,8 +198,7 @@ def test_invalid_tm_layer_contents(tmp_path: Path) -> None:
     initialize_anneal_cold_temp = 0.06
 
     # Electrochemistry
-    delithiation_steps = 10
-    oxidation_model = ni_2to4
+    oxidation_model = ni_2to4_co_3to4
 
     #Lattice mid-delithiation annealing
     mid_delithiation_anneal_steps=1e4
@@ -249,8 +244,7 @@ def test_invalid_li_layer_contents(tmp_path: Path) -> None:
     initialize_anneal_cold_temp = 0.06
 
     # Electrochemistry
-    delithiation_steps = 10
-    oxidation_model = ni_2to4
+    oxidation_model = ni_2to3_co_3to4
 
     #Lattice mid-delithiation annealing
     mid_delithiation_anneal_steps=1e4
@@ -296,8 +290,7 @@ def test_invalid_method(tmp_path: Path) -> None:
     initialize_anneal_cold_temp = 0.06
 
     # Electrochemistry
-    delithiation_steps = 10
-    oxidation_model = co_2to4
+    oxidation_model = ni_2to4
 
     #Lattice mid-delithiation annealing
     mid_delithiation_anneal_steps=1e4

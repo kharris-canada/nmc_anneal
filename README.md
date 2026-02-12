@@ -40,7 +40,6 @@ initialize_anneal_hot_temp = 0.2
 initialize_anneal_cold_temp = 0.06
 
 # Electrochemistry
-delithiation_steps = 1.5e3
 delithiation_fraction_to_remove = 0.20
 oxidation_model = ni_2to4
 
@@ -123,6 +122,23 @@ Results:
 <br />
 <br />
 
+#### Charging (delithiating) the cathode
+
+Each metal position has a different energy according to the charge balance equation shown above. It therefore stands to reason that the oxidations of transition metals (or removals of Li atoms) that improve the oxygen atom's local energy balance (or hurt it worse) will occur first. Unlike TM positions moving around the lattice during chemical synthesis, the electron and lithium movement are relatively quick at room temperature. Instead of simulated annealing then, the program calculates the lowest energy moves directly (or randomly selects amongst any of the equally "best" moves.)  Three models for the oxidation steps are provided: 
+* Ni$^{2+}$ directly to Ni$^{4+}$ (and then followed by Co$^{3+}$ if at extremely high capacity). Oxidation model = "ni_2to4_co_3to4".
+* Ni$^{2+}$ to Ni$^{3+}$, and then once complete, Ni$^{3+}$ directly to Ni$^{4+}$ begins (and Co$^{3+}$ if needed). Oxidation model = "ni_2to3_ni_3to4_co_3to4".
+* Ni$^{2+}$ to Ni$^{3+}$, and then once complete, EITHER Ni$^{3+}$ directly to Ni$^{4+}$ or Co$^{3+}$ to Co$^{4+}$ according to oxygen energy at each atomic step. Oxidation model = "ni_2to3_any_3to4".
+
+```python
+import nmc_anneal.core.charging_methods as cm
+
+cm.delithiate(config, whole_lattice_charges, whole_lattice_species, frac_li_to_remove = 0.250 )
+
+```
+
+<br />
+<br />
+
 ## Implementation Details and Structure Conventions
 
 The chemical structure of layered NMC cathodes consists of alternating 2D sheets of transition metals alternating with 2D sheets of lithium atoms. These metal layers are separated by oxygen sheets. The oxygen sheets do not change in any across different stoichiometries or charge levels, so these are not represented internally. Calculations instead refer to virtual oxygen layers with the same structure for book-keeping purposes.
@@ -140,6 +156,7 @@ The shift from the third layer to the fourth layer is such that the atomic posit
  
  <br />
  <br />
+ <br />
 
 The oxygen layers are chemically immutable, so there is no need to store them. However, bookkeeping requires a convention to refer to them for calculating nearest neighbors. Here, we use as a convention that oxygen-layer-0 is *between* metal-layer-0 (lithium layer) and metal-layer-1 (TM layer); i.e., oxygen layer 0 is physically between the metal layers desribed by [0,:,:] and [1,:,:] of the NumPy array. This means that every metal layer at vertical index *l* is sandwiched between oxygen layers with index (*l*-1) and (*l*), subject to periodicity when needed.
 
@@ -153,6 +170,5 @@ Index shifts for nearest-neighbor oxygen atoms are coded explicitly in energy_ca
 ## Planned Features
 
 ### Analysis methods:
-- More oxidation methods
 - Pair distribution functions (from diffraction data)
 

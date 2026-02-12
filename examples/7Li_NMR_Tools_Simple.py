@@ -23,7 +23,22 @@ def main() -> None:
     )
 
     # Generate a list of 7Li NMR peak positions and their intensity (site multiplicity)
-    nmr_ppm_shifts = get_all_nmr_shifts(whole_lattice_charges, whole_lattice_species)
+    nmr_shifts_dict_90s = {
+        "Mn": 255,
+        "Ni2+": -25,
+    }
+
+    nmr_shifts_dict_180s = {
+        "Mn": -52,
+        "Ni2+": 120,
+    }
+
+    nmr_ppm_shifts = get_all_nmr_shifts(
+        whole_lattice_charges,
+        whole_lattice_species,
+        nmr_shifts_dict_90s,
+        nmr_shifts_dict_180s,
+    )
 
     image_from_peaklist(
         data=nmr_ppm_shifts,

@@ -243,7 +243,7 @@ def _stoich_to_namestring(config: SimulationConfig) -> str:
     parts = []
 
     def fmt(x):
-        return f"{x:.2g}"  # adjust precision if desired
+        return f"{x:.2g}"
 
     if config.li_fraction_li_layer != 0:
         parts.append(f"$Li_{{{fmt(config.li_fraction_li_layer)}}}$")

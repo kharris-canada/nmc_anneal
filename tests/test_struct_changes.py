@@ -32,8 +32,7 @@ def test_specific_random_struct(tmp_path: Path) -> None:
     initialize_anneal_cold_temp = 0.06
 
     # Electrochemistry
-    delithiation_steps = 10
-    oxidation_model = ni_2to4
+    oxidation_model = ni_2to4_co_3to4
 
     #Lattice mid-delithiation annealing
     mid_delithiation_anneal_steps=1e4
@@ -93,8 +92,7 @@ def test_specific_random_struct(tmp_path: Path) -> None:
     initialize_anneal_cold_temp = 0.06
 
     # Electrochemistry
-    delithiation_steps = 10
-    oxidation_model = ni_2to4
+    oxidation_model = ni_2to4_co_3to4
 
     #Lattice mid-delithiation annealing
     mid_delithiation_anneal_steps=1e4

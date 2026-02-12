@@ -6,7 +6,10 @@ import numpy as np
 
 
 def get_all_nmr_shifts(
-    whole_lattice_charges: np.ndarray, whole_lattice_species
+    whole_lattice_charges: np.ndarray,
+    whole_lattice_species: np.ndarray,
+    nmr_shifts_dict_90s: dict,
+    nmr_shifts_dict_180s: dict,
 ) -> tuple[np.ndarray, np.ndarray]:
     """
     Reads in a structure and calculates the chemical shift of every Li from the table of values. Many atoms will have the same nmr shift, so these are
@@ -22,18 +25,22 @@ def get_all_nmr_shifts(
         tuple[np.ndarray, np.ndarray]: 1st array is list of all the nmr chemical shifts present, 2nd array is their frequency of occurance
     """
 
-    # Table of 7Li nmr chemical shifts in ppm from nearest neighbor TM atoms
-    # Bonded through an oxygen atom along a straight (180 deg) or bent (90 deg) bath
-    # Geometry encoded as index shifts below in this function
-    nmr_shifts_dict_90s = {
-        "Mn": 255,
-        "Ni2+": -25,
-    }
+    # The dict objects should contain the 7Li nmr chemical shifts in ppm caused by the nearest-neighbor
+    # TM atoms bonded through an oxygen atom along a straight (180 deg) or bent (90 deg) bond
+    # These shifts are temperature dependent (perhaps stoich-induced structurally too), so may be changed somewhat
+    # Can add any atom name from initialize_lattice.py
+    # NOTE: The geometry of these two bond angles in the geometry convention used here is described with index shifts below in this function
 
-    nmr_shifts_dict_180s = {
-        "Mn": -52,
-        "Ni2+": 120,
-    }
+    # example shift dictionaries:
+    # nmr_shifts_dict_90s = {
+    #     "Mn": 255,
+    #     "Ni2+": -25,
+    # }
+
+    # nmr_shifts_dict_180s = {
+    #     "Mn": -52,
+    #     "Ni2+": 120,
+    # }
 
     num_li_plus_tm_layers = whole_lattice_species.shape[0]
     lattice_width = whole_lattice_species.shape[1]

@@ -23,9 +23,8 @@ initialize_anneal_hot_temp = 0.2
 initialize_anneal_cold_temp = 0.00
 
 # Electrochemistry
-delithiation_steps = 1.5e3 
 delithiation_fraction_to_remove = 0.20 
-oxidation_model = ni_2to4
+oxidation_model = ni_2to4_co_3to4 
 
 #Lattice mid-delithiation annealing
 mid_delithiation_anneal_steps=0

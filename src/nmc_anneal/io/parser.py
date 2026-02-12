@@ -67,7 +67,6 @@ def _build_config(values: Dict[str, str]) -> SimulationConfig:
             initialize_anneal_hot_temp=float(values["initialize_anneal_hot_temp"]),
             initialize_anneal_cold_temp=float(values["initialize_anneal_cold_temp"]),
             # Electrochemistry
-            delithiation_steps=int(float(values["delithiation_steps"])),
             oxidation_model=values["oxidation_model"],
             # Lattice mid-delithiation annealing
             mid_delithiation_anneal_steps=int(
@@ -177,17 +176,14 @@ def _validate_composition(config: SimulationConfig) -> None:
 
 # Make sure delithiation procedure is sensible and defined
 def _validate_electrochemistry(config: SimulationConfig) -> None:
-    if config.delithiation_steps <= 0:
-        raise ValueError("delithiation_steps must be a positive integer")
 
-    allowed_models = {
-        "ni_2to4",
-        "ni_2to3_3to4",
-        "ni_2to4_co3to4",
-        "ni_2to3_ni_3to4_co3to4",
+    allowed_ox_models = {
+        "ni_2to4_co_3to4",
+        "ni_2to3_ni_3to4_co_3to4",
+        "ni_2to3_any_3to4",
     }
-    if config.oxidation_model not in allowed_models:
-        raise ValueError(f"oxidation_model must be one of {sorted(allowed_models)}")
+    if config.oxidation_model not in allowed_ox_models:
+        raise ValueError(f"oxidation_model must be one of {sorted(allowed_ox_models)}")
 
 
 def _validate_output(config: SimulationConfig) -> None:
