@@ -124,17 +124,74 @@ Results:
 
 #### Charging (delithiating) the cathode
 
-Each metal position has a different energy according to the charge balance equation shown above. It therefore stands to reason that the oxidations of transition metals (or removals of Li atoms) that improve the oxygen atom's local energy balance (or hurt it worse) will occur first. Unlike TM positions moving around the lattice during chemical synthesis, the electron and lithium movement are relatively quick at room temperature. Instead of simulated annealing then, the program calculates the lowest energy moves directly (or randomly selects amongst any of the equally "best" moves.)  Three models for the oxidation steps are provided: 
-* Ni$^{2+}$ directly to Ni$^{4+}$ (and then followed by Co$^{3+}$ if at extremely high capacity). Oxidation model = "ni_2to4_co_3to4".
-* Ni$^{2+}$ to Ni$^{3+}$, and then once complete, Ni$^{3+}$ directly to Ni$^{4+}$ begins (and Co$^{3+}$ if needed). Oxidation model = "ni_2to3_ni_3to4_co_3to4".
-* Ni$^{2+}$ to Ni$^{3+}$, and then once complete, EITHER Ni$^{3+}$ directly to Ni$^{4+}$ or Co$^{3+}$ to Co$^{4+}$ according to oxygen energy at each atomic step. Oxidation model = "ni_2to3_any_3to4".
+Each metal position has a different energy according to the charge balance equation discussed below. It therefore stands to reason that the oxidations of transition metals (or removals of Li atoms) that improve the oxygen atom's local energy balance (or hurt it worse) will occur first. Unlike TM positions moving around the lattice during chemical synthesis, the electron and lithium movement are relatively quick at room temperature. Instead of simulated annealing then, the program calculates the lowest energy moves directly (or randomly selects amongst any of the equally "best" moves.)  Three models for the oxidation steps are provided: 
+* Ni<sup>2+</sup> directly to Ni<sup>4+</sup> (and then followed by Co<sup>3+</sup>$ if at extremely high capacity). Oxidation model = "ni_2to4_co_3to4".
+* Ni<sup>2+</sup> to Ni<sup>3+</sup>, and then once complete, Ni<sup>3+</sup> directly to Ni<sup>4+</sup> begins (and Co<sup>3+</sup> if needed). Oxidation model = "ni_2to3_ni_3to4_co_3to4".
+* Ni<sup>2+</sup> to Ni<sup>3+</sup>, and then once complete, EITHER Ni<sup>3+</sup> directly to Ni<sup>4+</sup> or Co<sup>3+</sup> to Co<sup>4+</sup> according to oxygen energy at each atomic step. Oxidation model = "ni_2to3_any_3to4".
 
 ```python
 import nmc_anneal.core.charging_methods as cm
 
-cm.delithiate(config, whole_lattice_charges, whole_lattice_species, frac_li_to_remove = 0.250 )
+cm.delithiate(
+    config,
+    whole_lattice_charges,
+    whole_lattice_species,
+    frac_li_to_remove = 0.250,
+)
 
 ```
+
+<br />
+<br />
+
+#### Generating and comparing 7Li MAS NMR Spectra
+
+Lithium-7 NMR is an excellent probe of the local structure because each atom senses its six closest transition-metal neighbors (see reference above to Harris et al. and those therein for a full description). The exact shift introduced by each neighbor metal depends on its identity, its bond angle. They are also temperature dependent as well as bond length dependent, so you should treat minor variations of them as a fitting parameter. To generate a 7Li MAS NMR spectrum with a ppm axis as an array, specify the neighbor shift values as well as the full width at half maximum linewidth parameter. Optionally, you can specify a linear increase in FWHM as the central shift increases away from 0 ppm:
+
+```python
+from nmc_anneal.analysis.struct2nmr import get_all_nmr_shifts
+
+nmr_shifts_dict_90s = {
+        "Mn": 255,
+        "Ni2+": -25,
+}
+
+nmr_shifts_dict_180s = {
+    "Mn": -52,
+    "Ni2+": 120,
+}
+
+nmr_ppm_shifts = get_all_nmr_shifts(
+    whole_lattice_charges,
+    whole_lattice_species,
+    nmr_shifts_dict_90s,
+    nmr_shifts_dict_180s,
+)
+
+```
+<br />
+This digitized spectrum stored as an array can be plotted with any software you are familiar with, or with the "image_from_peaklist" function in viz.nmr_simpleplot directly in this package. You can also directly overlay this simulated spectrum with an experimental one stored in the same format using:
+
+```python
+import nmc_anneal.viz.nmr_gui as NMRplot
+
+data = np.load("examples/artifical_experimental_7LiNMR.npz")
+exp_ppm_axis = data["ppm_axis"]
+exp_intensities = data["intensities"]
+
+datasets = {
+    "Simulation": (nmr_ppm_shifts[0], nmr_ppm_shifts[1]),
+    "Experiment": (exp_ppm_axis, exp_intensities),
+}
+
+NMRplot.run_peak_gui(datasets)
+```
+
+<br/>
+This allows you to change the lineshape parameters interactively to ensure an accurate fit of the model to the experimental data.
+
+Interface:
+![Phase Transition](docs/images/NMR_gui.png)
 
 <br />
 <br />
