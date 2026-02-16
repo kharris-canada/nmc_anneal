@@ -1,15 +1,20 @@
-from pathlib import Path
 import numpy as np
+from numpy.typing import NDArray
 
-from nmc_anneal import SimulationConfig
-from nmc_anneal import anneal_3Dlattice
 import nmc_anneal.viz.gridplots as gridplots
+from nmc_anneal.core.anneal_lattice import anneal_3Dlattice
+from nmc_anneal.core.config import SimulationConfig
+
+# Type alias for species lattices (dtype="<U4")
+SpeciesLattice = NDArray[np.str_]
+# Type alias for charges lattices (dtype=np.int8)
+ChargesLattice = NDArray[np.int8]
 
 
 def find_and_plot_convergence(
     config: SimulationConfig,
-    whole_lattice_charges: np.ndarray,
-    whole_lattice_species: np.ndarray,
+    whole_lattice_charges: ChargesLattice,
+    whole_lattice_species: SpeciesLattice,
     output_filename: str,
     anneal_type: str,
     max_n_steps: int,
@@ -25,7 +30,7 @@ def find_and_plot_convergence(
     """
     if len(fraction_max_steps_list) > 8:
         raise ValueError(
-            f"Automatic plotting of convergence only works for up to 9 simulation lengths. "
+            "Automatic plotting of convergence only works for up to 9 simulation lengths. "
         )
 
     VALID_ANNEAL_TYPES = {
@@ -65,7 +70,7 @@ def find_and_plot_convergence(
         )
 
         last_5_percent_start = int(95 * (len(energy_trajectory) / 100))
-        avg_final_energy = np.mean(energy_trajectory[last_5_percent_start:])
+        avg_final_energy = float(np.mean(energy_trajectory[last_5_percent_start:]))
 
         trajectories.append(energy_trajectory)
         step_counts.append(config.curr_conv_check_n_steps)

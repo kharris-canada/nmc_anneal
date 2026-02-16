@@ -41,8 +41,8 @@ class SimulationConfig:
     random_seed: int | None
 
     # Internally used variables, not for use in input text file:
-    stoich_string = None
-    curr_conv_check_n_steps = None
-    curr_conv_check_max_n_steps = None
-    curr_conv_check_hot_temp = None
-    curr_conv_check_cold_temp = None
+    stoich_string: str
+    curr_conv_check_n_steps: int
+    curr_conv_check_max_n_steps: int
+    curr_conv_check_hot_temp: float
+    curr_conv_check_cold_temp: float

@@ -1,5 +1,7 @@
 from pathlib import Path
+
 import numpy as np
+
 import nmc_anneal as nmc
 
 

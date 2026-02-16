@@ -1,19 +1,26 @@
-import numpy as np
-import math, random
+import math
+import random
 from concurrent.futures import ProcessPoolExecutor
 
-from nmc_anneal import SimulationConfig
+import numpy as np
+from numpy.typing import NDArray
 
 import nmc_anneal.core.energy_calculations as encalc
+from nmc_anneal.core.config import SimulationConfig
+
+# Type alias for species lattices (dtype="<U4")
+SpeciesLattice = NDArray[np.str_]
+# Type alias for charges lattices (dtype=np.int8)
+ChargesLattice = NDArray[np.int8]
 
 
 def anneal_3Dlattice(
     config: SimulationConfig,
-    whole_lattice_charges: np.ndarray,
-    whole_lattice_species: np.ndarray,
+    whole_lattice_charges: ChargesLattice,
+    whole_lattice_species: SpeciesLattice,
     anneal_type: str,
     graph_energy: bool = False,
-) -> np.ndarray:
+) -> list[float]:
     """
     Handles passing lattice and parameters to parallel set of anneal_2D() processes and collating results
     - passes one 3-layer-sandwich of lattice to each process
@@ -70,7 +77,8 @@ def anneal_3Dlattice(
     if anneal_type == "Initialize TM" or anneal_type == "TM Convergence Check":
         for idx_orig_layer, idx_annealed_layer in zip(
             range(1, 2 * config.n_layers, 2),
-            range(0, len(annealed_layers_species) + 1, 1),
+            range(0, len(annealed_layers_species), 1),
+            strict=True,
         ):
             whole_lattice_charges[idx_orig_layer] = annealed_layers_charges[
                 idx_annealed_layer
@@ -82,7 +90,8 @@ def anneal_3Dlattice(
     if anneal_type == "Anneal Li" or anneal_type == "Li Convergence Check":
         for idx_orig_layer, idx_annealed_layer in zip(
             range(0, 2 * config.n_layers - 1, 2),
-            range(0, len(annealed_layers_species) + 1, 1),
+            range(0, len(annealed_layers_species), 1),
+            strict=True,
         ):
             whole_lattice_charges[idx_orig_layer] = annealed_layers_charges[
                 idx_annealed_layer
@@ -91,7 +100,7 @@ def anneal_3Dlattice(
                 idx_annealed_layer
             ]
 
-    if graph_energy == True:
+    if graph_energy:
         energy_list_per_layer = [r[3] for r in results]
         energies = np.mean(np.stack(energy_list_per_layer), axis=0)
 
@@ -100,11 +109,11 @@ def anneal_3Dlattice(
 
 def _slice_up_lattice(
     config: SimulationConfig,
-    whole_lattice_charges: np.ndarray,
-    whole_lattice_species: np.ndarray,
+    whole_lattice_charges: ChargesLattice,
+    whole_lattice_species: SpeciesLattice,
     anneal_type: str,
     graph_energy: bool = False,
-) -> tuple[int, int, int, float, float, np.ndarray, np.ndarray, np.ndarray]:
+) -> list[tuple[int, int, int, float, float, ChargesLattice, SpeciesLattice, bool]]:
     """
         Take entire lattice and slice into 3-layer sandwiches with the layer "idx_anneal_layer" as center layer
     anneal_type string sets whether to anneal the Li layers (those with even indices) or the TM layers (those with odd indices)
@@ -146,7 +155,7 @@ def _slice_up_lattice(
             ) from exc
     else:
         raise ValueError(
-            f"anneal_type must be one of: Initialize TM, Anneal Li, TM Convergence Check, Li Convergence Check"
+            "anneal_type must be one of: Initialize TM, Anneal Li, TM Convergence Check, Li Convergence Check"
         )
 
     # TM layers are odd numbered vertical layers
@@ -160,7 +169,6 @@ def _slice_up_lattice(
     # Make the three-layer lattice sandwiches, accounting for vertical periodicity
     list_of_sandwiches = []
     for idx_center_layer in indices_center_layers:
-
         idx_bottom_layer = idx_center_layer - 1
         if idx_bottom_layer == -1:
             idx_bottom_layer = 2 * config.n_layers - 1
@@ -189,7 +197,7 @@ def _slice_up_lattice(
             axis=0,
         )
         list_of_sandwiches.append(
-            [
+            (
                 idx_center_layer,
                 n_steps,
                 config.width,
@@ -198,7 +206,7 @@ def _slice_up_lattice(
                 lattice_3L_charges,
                 lattice_3L_species,
                 graph_energy,
-            ]
+            )
         )
 
     return list_of_sandwiches
@@ -217,10 +225,10 @@ def _anneal_2D(
     lattice_width: int,
     sim_temp_hot: float,
     sim_temp_cold: float,
-    lattice_charges: np.ndarray,
-    lattice_species: np.ndarray,
+    lattice_charges: ChargesLattice,
+    lattice_species: SpeciesLattice,
     graph_energy: bool = False,
-) -> tuple[int, np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[int, SpeciesLattice, ChargesLattice, np.ndarray]:
     """
     Reads in a 3-layer segment of whole lattice and anneals the center layer
     - returns just the annealed layer
@@ -241,9 +249,9 @@ def _anneal_2D(
         tuple[int, np.ndarray, np.ndarray, np.ndarray]: return just the center layer (the annealed one) with its original index and optionally the energy trajectory
     """
 
-    if graph_energy == True and n_steps < 100:
+    if graph_energy and n_steps < 100:
         raise ValueError(
-            f"Cannot generate graph of energies each 1% of run if n_steps is less than 100!"
+            "Cannot generate graph of energies each 1% of run if n_steps is less than 100!"
         )
 
     energies = np.zeros(101)
@@ -282,14 +290,14 @@ def _anneal_2D(
         # Determine if swap accepted or not
         sim_temp = _temp_ramp_shape(n_steps, curr_step, sim_temp_cold, sim_temp_hot)
 
-        if swap_energy >= 0:  # always accept if downhill
-            p_swap = 1
+        if swap_energy >= 0.0:  # always accept if downhill
+            p_swap = 1.0
 
-        elif sim_temp <= 0:
-            p_swap = 0
+        elif sim_temp <= 0.0:
+            p_swap = 0.0
 
         # If uphill, probability falls exponentially as energy cost of uphill step increases
-        elif swap_energy < 0:
+        elif swap_energy < 0.0:
             p_swap = math.exp(swap_energy / sim_temp)
 
         # Uphill step accepted and charge swap saved to lattice of charges IF probability bests random number generator:
@@ -304,17 +312,17 @@ def _anneal_2D(
                 lattice_species[atom1],
             )
 
-        if graph_energy == True:
+        if graph_energy:
             if curr_step % checkpoint_interval == 0:
                 current_percent_idx = int(curr_step / checkpoint_interval)
                 if curr_step != n_steps:
-                    energies[current_percent_idx] = (
-                        encalc.one_metal_layer_oxygen_energies(lattice_charges)
-                    )
+                    energies[
+                        current_percent_idx
+                    ] = encalc.one_metal_layer_oxygen_energies(lattice_charges)
                 else:
-                    energies[(len(energies) - 1)] = (
-                        encalc.one_metal_layer_oxygen_energies(lattice_charges)
-                    )
+                    energies[
+                        (len(energies) - 1)
+                    ] = encalc.one_metal_layer_oxygen_energies(lattice_charges)
 
     return (
         idx_anneal_layer,

@@ -1,6 +1,5 @@
-import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.colors import ListedColormap, BoundaryNorm
+import numpy as np
 from matplotlib.patches import Circle
 
 
@@ -9,7 +8,6 @@ def plot_2Dlattice(
     filename: str = "2Dlattice.pdf",
     atom_radius: float = 0.45,
 ):
-
     color_map = {
         -2: "firebrick",
         0: "black",

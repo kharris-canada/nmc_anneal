@@ -1,7 +1,7 @@
-import numpy as np
-import matplotlib.pyplot as plt
 from pathlib import Path
 
+import matplotlib.pyplot as plt
+import numpy as np
 
 # ============================================================
 # -----------------  SPECTRUM GENERATOR  ----------------------
@@ -53,7 +53,7 @@ def generate_spectrum(
     x = np.linspace(xmin, xmax, int(n_points))
     y = np.zeros_like(x)
 
-    for s, amp in zip(shifts, intensities):
+    for s, amp in zip(shifts, intensities, strict=True):
         fwhm = fwhm_at_zero + fwhm_linear_scale * abs(s)
         y += amp * _pseudo_voigt(x, s, fwhm, eta)
 
@@ -108,8 +108,6 @@ def image_from_peaklist(
 
     if len(shifts) != len(intensities):
         raise ValueError("shifts and intensities must have same length")
-
-    eta = percent_gaussian / 100.0
 
     x, y = generate_spectrum(
         data[0],

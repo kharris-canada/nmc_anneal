@@ -1,15 +1,21 @@
-import numpy as np
-import math, random
-from concurrent.futures import ProcessPoolExecutor
+import random
 
-from nmc_anneal import SimulationConfig
+import numpy as np
+from numpy.typing import NDArray
+
 import nmc_anneal.core.energy_calculations as encalc
+from nmc_anneal.core.config import SimulationConfig
+
+# Type alias for species lattices (dtype="<U4")
+SpeciesLattice = NDArray[np.str_]
+# Type alias for charges lattices (dtype=np.int8)
+ChargesLattice = NDArray[np.int8]
 
 
 def delithiate(
     config: SimulationConfig,
-    whole_lattice_charges: np.ndarray,
-    whole_lattice_species: np.ndarray,
+    whole_lattice_charges: ChargesLattice,
+    whole_lattice_species: SpeciesLattice,
     frac_li_to_remove: float,
 ):
     """
@@ -51,7 +57,7 @@ def delithiate(
             whole_lattice_species,
             original_charge,
             redox_charge,
-            range(1, 2 * config.n_layers),
+            list(range(1, 2 * config.n_layers)),
         )
 
         original_charge = 1
@@ -61,7 +67,7 @@ def delithiate(
             whole_lattice_species,
             original_charge,
             redox_charge,
-            range(0, 2 * config.n_layers),
+            list(range(0, 2 * config.n_layers)),
         )
 
         # Stoichiometry calculations:
@@ -83,8 +89,7 @@ def delithiate(
                 f"Not enough Ni atoms + Co atoms for requested amount of redox. Requested {num_ni2_to_ni4} Ni2 and {num_co3_to_co4} Co3 atoms oxidized, whereas {start_num_ni2} Ni2 and {start_num_co3 } Co3 are present"
             )
 
-        for step in range(0, num_ni2_to_ni4):
-
+        for _step in range(0, num_ni2_to_ni4):
             # oxidize Ni2+ to Ni4+ and update energies of all 2+Ni and Li sites
             # chooses lowest energy site (or randomly selects between several if equal energies)
             _redox_and_update2lists(
@@ -101,7 +106,7 @@ def delithiate(
 
             # remove the two Li atoms to charge balance and update Li and Ni2+ oxidation energy lists
             # chooses lowest energy site (or randomly selects between several if equal energies)
-            for i in {1, 2}:
+            for _i in {1, 2}:
                 _redox_and_update2lists(
                     whole_lattice_charges,
                     whole_lattice_species,
@@ -125,13 +130,12 @@ def delithiate(
             whole_lattice_species,
             original_charge,
             redox_charge,
-            range(1, 2 * config.n_layers),
+            list(range(1, 2 * config.n_layers)),
         )
 
         co_energies_3plus = [row for row in energies_3plus if row[-1] == "Co3+"]
 
-        for step in range(0, num_co3_to_co4):
-
+        for _step in range(0, num_co3_to_co4):
             # oxidize Co3+ to Co4+ and update energies of all Co3+ and Li sites
             _redox_and_update2lists(
                 whole_lattice_charges,
@@ -167,7 +171,6 @@ def delithiate(
     # (2) only after all converted to Ni3+, oxidizes Ni3+ to Ni4+, removing one Li in each Ni oxidation step
     # (3) only after all Ni2+ converted to Ni4+, begin converting Co3+ to Co4+
     if config.oxidation_model == "ni_2to3_ni_3to4_co_3to4":
-
         # Stoichiometry calculations:
         start_num_ni2 = np.count_nonzero(whole_lattice_species == "Ni2+")
         start_num_co3 = np.count_nonzero(whole_lattice_species == "Co3+")
@@ -199,7 +202,7 @@ def delithiate(
             whole_lattice_species,
             original_charge,
             redox_charge,
-            range(1, 2 * config.n_layers),
+            list(range(1, 2 * config.n_layers)),
         )
 
         original_charge = 1
@@ -209,11 +212,10 @@ def delithiate(
             whole_lattice_species,
             original_charge,
             redox_charge,
-            range(0, 2 * config.n_layers),
+            list(range(0, 2 * config.n_layers)),
         )
 
-        for step in range(0, num_ni2_to_ni3):
-
+        for _step in range(0, num_ni2_to_ni3):
             # oxidize Ni2+ to Ni3+ and update energies of all Ni2+ and Li sites
             _redox_and_update2lists(
                 whole_lattice_charges,
@@ -251,13 +253,12 @@ def delithiate(
             whole_lattice_species,
             original_charge,
             redox_charge,
-            range(1, 2 * config.n_layers),
+            list(range(1, 2 * config.n_layers)),
         )
 
         ni_energies_3plus = [row for row in energies_3plus if row[-1] == "Ni3+"]
 
-        for step in range(0, num_ni3_to_ni4):
-
+        for _step in range(0, num_ni3_to_ni4):
             # oxidize Ni3+ to Ni4+ and update energies of all Ni3+ and Li sites
             _redox_and_update2lists(
                 whole_lattice_charges,
@@ -295,13 +296,12 @@ def delithiate(
             whole_lattice_species,
             original_charge,
             redox_charge,
-            range(1, 2 * config.n_layers),
+            list(range(1, 2 * config.n_layers)),
         )
 
         co_energies_3plus = [row for row in energies_3plus if row[-1] == "Co3+"]
 
-        for step in range(0, num_co3_to_co4):
-
+        for _step in range(0, num_co3_to_co4):
             # oxidize Co3+ to Co4+ and update energies of all Co3+ and Li sites
             _redox_and_update2lists(
                 whole_lattice_charges,
@@ -343,7 +343,7 @@ def delithiate(
             whole_lattice_species,
             original_charge,
             redox_charge,
-            range(1, 2 * config.n_layers),
+            list(range(1, 2 * config.n_layers)),
         )
 
         original_charge = 1
@@ -353,7 +353,7 @@ def delithiate(
             whole_lattice_species,
             original_charge,
             redox_charge,
-            range(0, 2 * config.n_layers),
+            list(range(0, 2 * config.n_layers)),
         )
 
         # Stoichiometry calculations:
@@ -373,11 +373,10 @@ def delithiate(
 
         if num_li_to_remove_stage2 > (start_num_ni2 + start_num_co3):
             raise ValueError(
-                f"Not enough Ni + Co atoms for the second redox stage of Ni3+ -> Ni4+ / Co3+ to Co4+ to equate to the Li removal requested."
+                "Not enough Ni + Co atoms for the second redox stage of Ni3+ -> Ni4+ / Co3+ to Co4+ to equate to the Li removal requested."
             )
 
-        for step in range(0, num_ni2_to_ni3):
-
+        for _step in range(0, num_ni2_to_ni3):
             # oxidize Ni2+ to Ni3+ and update energies of all 2+Ni and Li sites
             # chooses lowest energy site (or randomly selects between several if equal energies)
             _redox_and_update2lists(
@@ -417,11 +416,10 @@ def delithiate(
             whole_lattice_species,
             original_charge,
             redox_charge,
-            range(1, 2 * config.n_layers),
+            list(range(1, 2 * config.n_layers)),
         )
 
-        for step in range(0, num_li_to_remove_stage2):
-
+        for _step in range(0, num_li_to_remove_stage2):
             # oxidize Ni2+ to Ni4+ and update energies of all 2+Ni and Li sites
             # chooses lowest energy site (or randomly selects between several if equal energies)
             _redox_and_update2lists(
@@ -457,8 +455,8 @@ def delithiate(
 
 
 def _get_energy_list(
-    whole_lattice_charges: np.ndarray,
-    whole_lattice_species: np.ndarray,
+    whole_lattice_charges: ChargesLattice,
+    whole_lattice_species: SpeciesLattice,
     charge_to_tabulate: int,
     proposed_new_charge: int,
     layers_to_tabulate: list,
@@ -485,16 +483,15 @@ def _get_energy_list(
     energies = []
 
     for layer in layers_to_tabulate:
-
         mask = whole_lattice_charges[layer] == charge_to_tabulate
 
         xs, ys = np.where(mask)
 
-        for x, y in zip(xs, ys):
+        for x, y in zip(xs, ys, strict=True):
             energy = encalc.single_metal_redox(
                 proposed_new_charge,
                 whole_lattice_charges,
-                np.array([layer, x, y]),
+                (layer, x, y),
             )
             atom_name = whole_lattice_species[layer, x, y]
             energies.append([layer, int(x), int(y), float(energy), atom_name])
@@ -531,8 +528,8 @@ def _rndm_idx_lowestE(
 
 
 def _redox_and_update2lists(
-    whole_lattice_charges: np.ndarray,
-    whole_lattice_species: np.ndarray,
+    whole_lattice_charges: ChargesLattice,
+    whole_lattice_species: SpeciesLattice,
     list_to_oxidize: list,
     redox_starting_charge: int,
     redox_ending_charge: int,
@@ -689,7 +686,7 @@ def _get_neighbor_indices(
 
 
 def _update_en_list(
-    whole_lattice_charges: np.ndarray,
+    whole_lattice_charges: ChargesLattice,
     redox_starting_charge: int,
     redox_ending_charge: int,
     energies_list: list,
@@ -721,7 +718,7 @@ def _update_en_list(
             energy = encalc.single_metal_redox(
                 redox_ending_charge,
                 whole_lattice_charges,
-                np.array(index),
+                index,
             )
             new_energies_list.append([index[0], index[1], index[2], float(energy)])
 

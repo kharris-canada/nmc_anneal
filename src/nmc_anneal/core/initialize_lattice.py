@@ -1,5 +1,12 @@
 import numpy as np
-from nmc_anneal import SimulationConfig
+from numpy.typing import NDArray
+
+from nmc_anneal.core.config import SimulationConfig
+
+# Type alias for species lattices (dtype="<U4")
+SpeciesLattice = NDArray[np.str_]
+# Type alias for charges lattices (dtype=np.int8)
+ChargesLattice = NDArray[np.int8]
 
 # Species labels
 LI = "Li"
@@ -22,7 +29,7 @@ SPECIES_CHARGE = {
 
 def initialize_lattice(
     config: SimulationConfig,
-) -> tuple[np.ndarray, np.ndarray]:
+) -> tuple[SpeciesLattice, ChargesLattice]:
     """
     Generate initial species and charge lattices using random positioning for stoichometry in the config data class
 
@@ -38,7 +45,7 @@ def initialize_lattice(
 
     Convention is that even layers (0,2,4, etc.) are Li
                   while odd layers are TM layers
-                  oxygen layers not explicity stored as unchanging
+                  oxygen layers not explicitly stored as unchanging
     """
 
     if config.random_seed is not None:
@@ -72,7 +79,7 @@ def initialize_lattice(
 
 def _populate_li_layer(
     config: SimulationConfig, rng: np.random.Generator
-) -> np.ndarray:
+) -> SpeciesLattice:
     """
 
     Args:
@@ -106,7 +113,7 @@ def _populate_li_layer(
 
 def _populate_tm_layer(
     config: SimulationConfig, rng: np.random.Generator
-) -> np.ndarray:
+) -> SpeciesLattice:
     """_summary_
 
     Args:
@@ -185,7 +192,7 @@ def _build_layer_array(
     species: list[str],
     counts: list[int],
     rng: np.random.Generator,
-) -> np.ndarray:
+) -> SpeciesLattice:
     """
     Generate random positions for all the species in they array called layer.
     NOTE: doesn't have the correct 2D shape, it gets reformatted to a square later
@@ -202,7 +209,7 @@ def _build_layer_array(
     layer = np.full(n_sites, VACANCY, dtype="<U4")
 
     start = 0
-    for specie, count in zip(species, counts):
+    for specie, count in zip(species, counts, strict=True):
         layer[start : start + count] = specie
         start += count
 
@@ -210,7 +217,7 @@ def _build_layer_array(
     return layer
 
 
-def _charges_from_species(species_layer: np.ndarray) -> np.ndarray:
+def _charges_from_species(species_layer: SpeciesLattice) -> ChargesLattice:
     """
     Map species labels to default charges.
 

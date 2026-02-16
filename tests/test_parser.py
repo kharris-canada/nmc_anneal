@@ -3,7 +3,6 @@ from pathlib import Path
 import pytest
 
 import nmc_anneal as nmc
-from nmc_anneal import SimulationConfig
 
 
 def test_parse_valid_input(tmp_path: Path) -> None:

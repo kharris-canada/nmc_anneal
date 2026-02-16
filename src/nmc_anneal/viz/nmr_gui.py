@@ -1,28 +1,23 @@
 import sys
+
 import numpy as np
-
-from PyQt5.QtWidgets import QLabel, QGridLayout
-from PyQt5.QtCore import Qt
-
-from PyQt5.QtWidgets import (
-    QApplication,
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QFormLayout,
-    QDoubleSpinBox,
-    QSpinBox,
-    QPushButton,
-    QSizePolicy,
-)
-
-
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from matplotlib.widgets import RectangleSelector
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import (
+    QApplication,
+    QDoubleSpinBox,
+    QGridLayout,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QSizePolicy,
+    QSpinBox,
+    QWidget,
+)
 
 from nmc_anneal.viz.nmr_simpleplot import generate_spectrum
-
 
 # ============================================================
 # ---------------------  MAIN WINDOW  -------------------------
@@ -30,7 +25,6 @@ from nmc_anneal.viz.nmr_simpleplot import generate_spectrum
 
 
 class PeakFitGUI(QWidget):
-
     # -------- Default values ---------
     gauss_perc = 50
     gauss_perc_delta = 5
@@ -57,7 +51,6 @@ class PeakFitGUI(QWidget):
     # ---------------- UI ----------------
 
     def init_ui(self):
-
         main_layout = QHBoxLayout(self)
 
         grid = QGridLayout()

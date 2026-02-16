@@ -1,7 +1,6 @@
 from pathlib import Path
-import numpy as np
-import nmc_anneal as nmc
 
+import nmc_anneal as nmc
 from nmc_anneal.analysis.struct2nmr import get_all_nmr_shifts
 from nmc_anneal.viz.nmr_simpleplot import image_from_peaklist
 

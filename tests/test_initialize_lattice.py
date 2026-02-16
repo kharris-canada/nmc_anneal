@@ -1,9 +1,7 @@
-from pathlib import Path
-import pytest
 import numpy as np
 
 import nmc_anneal as nmc
-from nmc_anneal import SimulationConfig
+from nmc_anneal.core.config import SimulationConfig
 
 
 def test_populate_lattice_species_and_charges():
@@ -30,6 +28,11 @@ def test_populate_lattice_species_and_charges():
         mid_delithiation_anneal_cold_temp=0.0,
         output_file=None,
         random_seed=0,
+        stoich_string="",
+        curr_conv_check_n_steps=0,
+        curr_conv_check_max_n_steps=0,
+        curr_conv_check_hot_temp=0.0,
+        curr_conv_check_cold_temp=0.0,
     )
 
     species, charges = nmc.initialize_lattice(config)

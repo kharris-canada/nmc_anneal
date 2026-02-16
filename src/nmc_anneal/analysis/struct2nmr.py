@@ -1,13 +1,16 @@
-from pathlib import Path
 import numpy as np
+from numpy.typing import NDArray
 
-# NOTE: indexes getting shifted by integers as you traverse the structure are different than NMR CHEMICAL shifts which come from frequency shifts for an atom in a chemical versus in a standard chemical
+# Type alias for species lattices (dtype="<U4")
+SpeciesLattice = NDArray[np.str_]
+# Type alias for charges lattices (dtype=np.int8)
+ChargesLattice = NDArray[np.int8]
 # Therefore must be careful with the word shift that is used in two ways
 
 
 def get_all_nmr_shifts(
-    whole_lattice_charges: np.ndarray,
-    whole_lattice_species: np.ndarray,
+    whole_lattice_charges: ChargesLattice,
+    whole_lattice_species: SpeciesLattice,
     nmr_shifts_dict_90s: dict,
     nmr_shifts_dict_180s: dict,
 ) -> tuple[np.ndarray, np.ndarray]:
@@ -19,10 +22,10 @@ def get_all_nmr_shifts(
 
     Args:
         whole_lattice_charges (np.ndarray): Array containing all charges in structure in the correct geometry. Formatted as in initialize_lattice.py.
-        whole_lattice_species (_type_): Array containing all ion names in structure in the correct geometry. Formatted as in initialize_lattice.py.
+        whole_lattice_species (np.ndarray): Array containing all ion names in structure in the correct geometry. Formatted as in initialize_lattice.py.
 
     Returns:
-        tuple[np.ndarray, np.ndarray]: 1st array is list of all the nmr chemical shifts present, 2nd array is their frequency of occurance
+        tuple[np.ndarray, np.ndarray]: 1st array is list of all the nmr chemical shifts present, 2nd array is their frequency of occurence
     """
 
     # The dict objects should contain the 7Li nmr chemical shifts in ppm caused by the nearest-neighbor
@@ -70,8 +73,7 @@ def get_all_nmr_shifts(
     indices = np.where(whole_lattice_species == "Li")
 
     all_nmr_shifts = []
-    for i, j, k in zip(*indices):
-
+    for i, j, k in zip(*indices, strict=True):
         tot_nmr_shift_this_Li = 0
 
         # Sum neighbors up or down one layer at 90 degrees

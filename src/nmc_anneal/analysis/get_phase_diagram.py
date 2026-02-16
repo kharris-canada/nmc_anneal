@@ -1,16 +1,21 @@
-from pathlib import Path
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+from numpy.typing import NDArray
 
-from nmc_anneal import SimulationConfig
-from nmc_anneal import anneal_3Dlattice
 import nmc_anneal.core.energy_calculations as encalc
+from nmc_anneal.core.anneal_lattice import anneal_3Dlattice
+from nmc_anneal.core.config import SimulationConfig
+
+# Type alias for species lattices (dtype="<U4")
+SpeciesLattice = NDArray[np.str_]
+# Type alias for charges lattices (dtype=np.int8)
+ChargesLattice = NDArray[np.int8]
 
 
 def get_phase_diagram(
     config: SimulationConfig,
-    whole_lattice_charges: np.ndarray,
-    whole_lattice_species: np.ndarray,
+    whole_lattice_charges: ChargesLattice,
+    whole_lattice_species: SpeciesLattice,
     output_filename: str,
     anneal_type: str,
     n_steps_perT: float,
@@ -89,10 +94,6 @@ def get_phase_diagram(
         )
 
 
-import numpy as np
-import matplotlib.pyplot as plt
-
-
 def _plot_temp_trajectories(
     output_filename: str, energy_trajectories: list, temp_axis: list
 ):
@@ -108,11 +109,11 @@ def _plot_temp_trajectories(
     :type temp_axis: list
     """
 
-    energy_trajectories = np.asarray(energy_trajectories)
-    n_checks, n_points = energy_trajectories.shape
+    energy_trajectories_arr = np.asarray(energy_trajectories)
+    n_checks, n_points = energy_trajectories_arr.shape
 
-    global_ymin = energy_trajectories.min()
-    global_ymax = energy_trajectories.max()
+    global_ymin = energy_trajectories_arr.min()
+    global_ymax = energy_trajectories_arr.max()
     pad = 0.05 * (global_ymax - global_ymin)
     global_ymin -= pad
     global_ymax += pad
@@ -132,7 +133,7 @@ def _plot_temp_trajectories(
         )
 
     # Mean trajectory (red line)
-    mean_trajectory = energy_trajectories.mean(axis=0)
+    mean_trajectory = energy_trajectories_arr.mean(axis=0)
 
     ax.plot(
         temp_axis,

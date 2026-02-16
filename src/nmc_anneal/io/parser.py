@@ -1,7 +1,8 @@
 from __future__ import annotations
+
 from pathlib import Path
-from typing import Dict
-from nmc_anneal import SimulationConfig
+
+from nmc_anneal.core.config import SimulationConfig
 
 
 def parse_input_file(path: Path) -> SimulationConfig:
@@ -17,11 +18,11 @@ def parse_input_file(path: Path) -> SimulationConfig:
 
 
 # Read in input text file and store values as key/value pairs in a dict
-def _read_key_value_file(path: Path) -> Dict[str, str]:
+def _read_key_value_file(path: Path) -> dict[str, str]:
     if not path.exists():
         raise FileNotFoundError(f"Input file not found: {path}")
 
-    values: Dict[str, str] = {}
+    values: dict[str, str] = {}
 
     with path.open("r", encoding="utf-8") as f:
         for line_number, line in enumerate(f, start=1):
@@ -43,7 +44,7 @@ def _read_key_value_file(path: Path) -> Dict[str, str]:
 
 
 # Convert the key/value dict pairs to proper types and store in SimulationConfig class
-def _build_config(values: Dict[str, str]) -> SimulationConfig:
+def _build_config(values: dict[str, str]) -> SimulationConfig:
     try:
         return SimulationConfig(
             # Lattice
@@ -81,6 +82,11 @@ def _build_config(values: Dict[str, str]) -> SimulationConfig:
             # Output / control
             output_file=Path(values["output_file"]),
             random_seed=_parse_optional_int(values.get("random_seed")),
+            stoich_string="",
+            curr_conv_check_n_steps=0,
+            curr_conv_check_max_n_steps=0,
+            curr_conv_check_hot_temp=0.0,
+            curr_conv_check_cold_temp=0.0,
         )
     except KeyError as exc:
         raise KeyError(f"Missing required configuration key: {exc}") from exc
@@ -115,7 +121,6 @@ def _validate_lattice(config: SimulationConfig) -> None:
 
 # Make sure occupations physically possible (any amount of vacancies currently allowed in code, maybe not in real life)
 def _validate_composition(config: SimulationConfig) -> None:
-
     li_layer_fractional_vars = [
         config.li_fraction_li_layer,
         config.mn_fraction_li_layer,
@@ -176,7 +181,6 @@ def _validate_composition(config: SimulationConfig) -> None:
 
 # Make sure delithiation procedure is sensible and defined
 def _validate_electrochemistry(config: SimulationConfig) -> None:
-
     allowed_ox_models = {
         "ni_2to4_co_3to4",
         "ni_2to3_ni_3to4_co_3to4",

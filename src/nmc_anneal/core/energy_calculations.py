@@ -1,4 +1,8 @@
 import numpy as np
+from numpy.typing import NDArray
+
+# Type alias for charges lattices (dtype=np.int8)
+ChargesLattice = NDArray[np.int8]
 
 # there's at tiny bit of added overhead here in that we're checking for translational symmetry corrections on every single index in sum
 # could save time by manually summing over matrix edge rows (which require corrections with modulo) and then entire center (no corrections)
@@ -8,8 +12,8 @@ import numpy as np
 
 def _single_oxygen_energy(
     lattice_width: int,
-    lattice_charges: np.ndarray,
-    index: np.array,
+    lattice_charges: ChargesLattice,
+    index: tuple[int, int, int],
 ) -> float:
     """
     Calculate the energy of a single oxygen atom in the virtual oxygen matrix:
@@ -20,7 +24,7 @@ def _single_oxygen_energy(
     Args:
         lattice_width (int): Width of the square 2D layers
         lattice_charges (np.ndarray): Array containing all charges in structure in the correct geometry. Formatted as in initialize_lattice.py.
-        index (np.array): Address of the oxygen to calculate the energy of
+        index (tuple[int, int, int]): Address of the oxygen to calculate the energy of
 
     Returns:
         float: Energy of the oxygen located at address stored in index
@@ -39,11 +43,13 @@ def _single_oxygen_energy(
     metal5 = lattice_charges[(up_layer, index[1], (index[2] - 1) % lattice_width)]
     metal6 = lattice_charges[(up_layer, (index[1] - 1) % lattice_width, index[2])]
 
-    return (metal1 + metal2 + metal3 + metal4 + metal5 + metal6) / 6 - 2
+    return float((metal1 + metal2 + metal3 + metal4 + metal5 + metal6) / 6 - 2)
 
 
 def single_metal_energy(
-    lattice_width: int, lattice_charges: np.ndarray, index: np.array
+    lattice_width: int,
+    lattice_charges: ChargesLattice,
+    index: tuple[int, int, int],
 ) -> float:
     """
     Calculates the energy of a single metal (transition metal or lithium atom).
@@ -57,10 +63,10 @@ def single_metal_energy(
     Args:
         lattice_width (int): Width of the square 2D layers
         lattice_charges (np.ndarray): Array containing all charges in structure in the correct geometry. Formatted as in initialize_lattice.py.
-        index (np.array): Address of the metal to calculate the energy of
+        index (tuple[int, int, int]): Address of the metal to calculate the energy of
 
     Returns:
-        float: Energy of the oxygen located at address stored in index
+        float: Energy of the metal located at address stored in index
     """
 
     # Oxygen atoms might be outside bounding box if layer 0 of metal lattice:
@@ -75,7 +81,7 @@ def single_metal_energy(
     oxygen5 = (up_layer, index[1], (index[2] - 1) % lattice_width)
     oxygen6 = (up_layer, (index[1] - 1) % lattice_width, index[2])
 
-    energy_sum = 0
+    energy_sum = 0.0
     for virtual_oxygen_coord in [oxygen1, oxygen2, oxygen3, oxygen4, oxygen5, oxygen6]:
         energy_sum += abs(
             _single_oxygen_energy(lattice_width, lattice_charges, virtual_oxygen_coord)
@@ -86,8 +92,8 @@ def single_metal_energy(
 
 def single_metal_redox(
     proposed_charge: int,
-    lattice_charges: np.ndarray,
-    index: np.array,
+    lattice_charges: ChargesLattice,
+    index: tuple[int, int, int],
 ) -> float:
     """
     Calculates the energy of a single metal going from its charge listed in lattice_charges and changing to the proposed charge.
@@ -97,7 +103,7 @@ def single_metal_redox(
     Args:
         proposed_charge (int): Redox energy calculation uses this as the "after" charge state
         lattice_charges (np.ndarray): Array containing all charges in structure in the correct geometry. Formatted as in initialize_lattice.py.
-        index (np.array): Address of the metal to calculate the redox energy change of
+        index (tuple[int, int, int]): Address of the metal to calculate the redox energy change of
 
     Returns:
         float: Energy change of the metal located at address stored in index as its redox state changes as described
@@ -119,7 +125,7 @@ def single_metal_redox(
     oxygen6 = (up_layer, (index[1] - 1) % lattice_width, index[2])
 
     # Calculate energy of all involved oxygen atoms before swap
-    energy_sum_before_swap = 0
+    energy_sum_before_swap = 0.0
     for virtual_oxygen_coord in [oxygen1, oxygen2, oxygen3, oxygen4, oxygen5, oxygen6]:
         energy_sum_before_swap += abs(
             _single_oxygen_energy(lattice_width, lattice_charges, virtual_oxygen_coord)
@@ -128,7 +134,7 @@ def single_metal_redox(
     # Swap atom to new charge, calculate all relevant oxygen energies, then swap charge back
     original_charge = lattice_charges[(index[0], index[1], index[2])]
     lattice_charges[(index[0], index[1], index[2])] = proposed_charge
-    energy_sum_after_swap = 0
+    energy_sum_after_swap = 0.0
 
     for virtual_oxygen_coord in [oxygen1, oxygen2, oxygen3, oxygen4, oxygen5, oxygen6]:
         energy_sum_after_swap += abs(
@@ -143,7 +149,7 @@ def single_metal_redox(
     return round(energy_change, 5)
 
 
-def average_all_oxygen_energies(lattice_charges: np.ndarray) -> float:
+def average_all_oxygen_energies(lattice_charges: ChargesLattice) -> float:
     """
     Sum over all N layers of the virtual oxygen array implied by the metals in lattice_charges
     (oxygen array starts with layer 0 between metal layers 0 and 1 and goes until one layer above final TM so it's periodic)
@@ -163,8 +169,8 @@ def average_all_oxygen_energies(lattice_charges: np.ndarray) -> float:
 
     if (tot_layers % 2) != 0:
         raise ValueError(
-            f"average_all_oxygen_energies() is designed for the full lattice stack."
-            f"For 3-layer pieces, use one_metal_layer_oxygen_energies()"
+            "average_all_oxygen_energies() is designed for the full lattice stack."
+            "For 3-layer pieces, use one_metal_layer_oxygen_energies()"
         )
 
     energy_count = float(0)
@@ -173,13 +179,13 @@ def average_all_oxygen_energies(lattice_charges: np.ndarray) -> float:
         for j in range(0, width):
             for k in range(0, width):
                 energy_count += abs(
-                    _single_oxygen_energy(width, lattice_charges, [i, j, k])
+                    _single_oxygen_energy(width, lattice_charges, (i, j, k))
                 )
 
     return energy_count / (width * width * tot_layers)
 
 
-def one_metal_layer_oxygen_energies(lattice_charges: np.ndarray) -> float:
+def one_metal_layer_oxygen_energies(lattice_charges: ChargesLattice) -> float:
     """
     Sum over the two oxygen virtual layers on the two sides of one metal layer (TM or Li).
     (but must know the charges of the two metal layers on either side of each to calculate these oxygen layers so it's a 3-metal slab)
@@ -199,8 +205,8 @@ def one_metal_layer_oxygen_energies(lattice_charges: np.ndarray) -> float:
 
     if (tot_layers % 2) != 1:
         raise ValueError(
-            f"Function one_metal_layer_oxygen_energies() is for 3-layer pieces."
-            f"For the full lattice stack, use average_all_oxygen_energies()"
+            "Function one_metal_layer_oxygen_energies() is for 3-layer pieces."
+            "For the full lattice stack, use average_all_oxygen_energies()"
         )
 
     energy_count = float(0)
@@ -208,7 +214,7 @@ def one_metal_layer_oxygen_energies(lattice_charges: np.ndarray) -> float:
         for j in range(0, width):
             for k in range(0, width):
                 energy_count += abs(
-                    _single_oxygen_energy(width, lattice_charges, [i, j, k])
+                    _single_oxygen_energy(width, lattice_charges, (i, j, k))
                 )
 
     return energy_count / (width * width * 2)
@@ -216,9 +222,9 @@ def one_metal_layer_oxygen_energies(lattice_charges: np.ndarray) -> float:
 
 def energy_swap_two_metals(
     lattice_width: int,
-    lattice_charges: np.ndarray,
-    index_metal1: np.array,
-    index_metal2: np.array,
+    lattice_charges: ChargesLattice,
+    index_metal1: tuple[int, int, int],
+    index_metal2: tuple[int, int, int],
 ) -> float:
     """
     Calculate the energy change if one metal is swapped with another metal
@@ -227,9 +233,9 @@ def energy_swap_two_metals(
     Args:
         lattice_width (int): Width of the square 2D layers
         lattice_charges (np.ndarray): Array containing all charges in structure in the correct geometry. Formatted as in initialize_lattice.py.
-        index (np.array): Address of the metal to calculate the energy of
-        index_metal1 (np.array): Address of metal 1 involved in the swap
-        index_metal2 (np.array): Address of metal 2 involved in the swap
+        index (tuple[int, int, int]): Address of the metal to calculate the energy of
+        index_metal1 (tuple[int, int, int]): Address of metal 1 involved in the swap
+        index_metal2 (tuple[int, int, int]): Address of metal 2 involved in the swap
 
     Returns:
         float: energy of the swap

@@ -1,231 +1,130 @@
-# NMC Anneal python package
+# nmc_anneal
 
-## Purpose:
-Package generates potential trial structures for layered Nickel-Manganese-Cobalt (often called  Li-NMC, LNMC, NMC, or NCM) battery cathodes using a simple charge-balancing energy calculation. Any stoichiometry of transition metals and vacancies in both the lithium layer and the transition-metal layer can be modeled.
+**nmc_anneal** is a Python package for generating and analyzing atomistic models of layered nickel–manganese–cobalt (NMC) battery cathodes using charge-balance-driven simulated annealing.
 
-This code represents an expansion of the method published in *Structure Solution of Metal-Oxide Li Battery Cathodes from Simulated Annealing and Lithium NMR Spectroscopy* K. J. Harris, J. M. Foster,  M. Z. Tessaro, M. Jiang, X. Yang, Y. Wu, B. Protas, and G. R. Goward *Chem. Mater*. 29, 5550−5557, **2017**.  The NMC_anneal package uses the same basic energy equation but expands the model to three dimensions and includes the ability to study delithiated (charged) versions of any structure.
+The software predicts lithium ordering, transition-metal disorder, electrochemical delithiation behavior, and synthetic **⁷Li MAS NMR spectra** from atomistic lattice models, enabling direct comparison between structure and experiment.
 
-## Overview of model
-The layered structures are represented internally as a 3D NumPy array. The energy equation is defined as the local charge balance around each oxygen atom (defined as a minimum energy when each -2 oxygen is surrounded by +2 charge from surrounding metals). This energy equation is employed in a simulated annealing algorithm that moves metal atoms around within a layer using an artificial "temperature" parameter to mimic the thermal disorder these types of samples are synthesized with. The user defines the stoichiometry of each layer, annealing parameters such as temperature and number of steps, and has options to visualize the results of these runs. Optionally, the user can choose to charge the cathode by selecting one of the possible models for TM oxidation and specifying an amount to delithiate. Note that lithium atoms are very mobile, so these are moved to the lowest energy positions instead of employing an annealing temperature.
+---
 
-## Basic usage
+## What This Software Does
 
-#### Setting control parameters
+- Generates 3D atomistic models of layered NMC cathodes  
+- Simulates disorder formation during synthesis using simulated annealing  
+- Predicts lithium extraction (delithiation) behavior  
+- Generates synthetic **⁷Li MAS NMR spectra** from atomistic structures  
+- Enables structure ↔ spectroscopy interpretation  
+- Produces convergence diagnostics and phase information  
 
-Most of the fine grained detail of the model are defined via a structured text file with keywords. Example:
+---
 
+## Intended Users
+
+- Battery materials researchers  
+- Solid-state chemists  
+- NMR spectroscopists  
+- Computational materials scientists  
+
+---
+
+## Installation
+
+### Install from source (recommended for now)
+
+```bash
+git clone https://github.com/yourusername/nmc_anneal
+cd nmc_anneal
+pip install -e .
 ```
-# Lattice
-width = 12
-n_layers = 8
 
-#Li layer Composition
-li_fraction_li_layer = 1.00
-mn_fraction_li_layer = 0.00
-ni2_fraction_li_layer=0.0
-ni3_fraction_li_layer=0.0
-vac_fraction_li_layer=0.0
-
-# TM layer Composition
-li_fraction_tm_layer=0.
-mn_fraction_tm_layer=0.3333
-ni2_fraction_tm_layer=0.3333
-ni3_fraction_tm_layer=0.
-co_fraction_tm_layer=0.3333
-vac_fraction_tm_layer=0.0
-
-#Lattice initialization by annealing TM layer
-initialize_anneal_steps = 1e5
-initialize_anneal_hot_temp = 0.2
-initialize_anneal_cold_temp = 0.06
-
-# Electrochemistry
-delithiation_fraction_to_remove = 0.20
-oxidation_model = ni_2to4
-
-#Lattice mid-delithiation annealing
-mid_delithiation_anneal_steps=1e4
-mid_delithiation_anneal_hot_temp=0.0
-mid_delithiation_anneal_cold_temp=0.0
-
-# Output
-output_file = lattice_final.npy
+### Development install
+```bash
+pip install -e .[dev]
 ```
- <br />
- <br />
- 
- #### Example initialization and annealing
-An initial random structure can be generated with the initialize_lattice() function at the stoichiometry defined in an input text file, and those random TM positions can then be annealed.
- 
- 
 
-
+## Quick Example
 ```python
+import nmc_anneal as nmc
+from pathlib import Path
 
-#Load stoichiometry
+# Load configuration
 config = nmc.parse_input_file(Path("input.txt"))
 
-#Initialize lattice with random metal positions (dual arrays, one with atomic charges and one with their names):
-whole_lattice_species, whole_lattice_charges = nmc.initialize_lattice(config)
+# Initialize lattice
+species, charges = nmc.initialize_lattice(config)
 
-#Anneal structure:
-nmc.anneal_3Dlattice(
-        config,
-        whole_lattice_charges,
-        whole_lattice_species,
-        anneal_type="Initialize TM",
-        graph_energy=False,
-    )
-```
-<br />
-<br />
-
-#### Checking for convergence
-The number of steps required depends on the atoms present as well as the size of lattice chosen. To get some insight into when the simulation has reached ergodicity, use the convergence plotting tool to trace the average energy of the system vs the number of steps in the simulation.
-
-```python
- nmc.find_and_plot_convergence(
-        config,
-        whole_lattice_charges,
-        whole_lattice_species,
-        output_filename="energy_convergence.pdf",
-        anneal_type="TM Convergence Check",
-        max_n_steps=1e7,
-        sim_hot_temp=1.0,
-        sim_cold_temp=0.0,
-        fraction_max_steps_list=[0.00001, 0.0001, 0.001, 0.01, 0.1, 1],
-    )
-```
-Results:
-![Convergence VS Stepsize](docs/images/energy_convergence.png)
-<br />
-<br />
-#### Observing phase transitions
-Since the real world versions of these materials are generally quickly quenched from their high synthesis temperature, one is generally interested in tracking the behavior at different levels of disorder. It can be useful to generate a phase diagram with:
-```python
-   nmc.get_phase_diagram(
-        config,
-        whole_lattice_charges,
-        whole_lattice_species,
-        output_filename="phase_diagram.pdf",
-        anneal_type="TM Convergence Check",
-        n_steps_perT=1e4,
-        sim_start_temp=0,
-        sim_end_temp=3,
-    )
-
-```
-Results:
-![Phase Transition](docs/images/phase_diagram.png)
-
-
-<br />
-<br />
-
-#### Charging (delithiating) the cathode
-
-Each metal position has a different energy according to the charge balance equation discussed below. It therefore stands to reason that the oxidations of transition metals (or removals of Li atoms) that improve the oxygen atom's local energy balance (or hurt it worse) will occur first. Unlike TM positions moving around the lattice during chemical synthesis, the electron and lithium movement are relatively quick at room temperature. Instead of simulated annealing then, the program calculates the lowest energy moves directly (or randomly selects amongst any of the equally "best" moves.)  Three models for the oxidation steps are provided: 
-* Ni<sup>2+</sup> directly to Ni<sup>4+</sup> (and then followed by Co<sup>3+</sup>$ if at extremely high capacity). Oxidation model = "ni_2to4_co_3to4".
-* Ni<sup>2+</sup> to Ni<sup>3+</sup>, and then once complete, Ni<sup>3+</sup> directly to Ni<sup>4+</sup> begins (and Co<sup>3+</sup> if needed). Oxidation model = "ni_2to3_ni_3to4_co_3to4".
-* Ni<sup>2+</sup> to Ni<sup>3+</sup>, and then once complete, EITHER Ni<sup>3+</sup> directly to Ni<sup>4+</sup> or Co<sup>3+</sup> to Co<sup>4+</sup> according to oxygen energy at each atomic step. Oxidation model = "ni_2to3_any_3to4".
-
-```python
-import nmc_anneal.core.charging_methods as cm
-
-cm.delithiate(
-    config,
-    whole_lattice_charges,
-    whole_lattice_species,
-    frac_li_to_remove = 0.250,
-)
-
+# Run annealing
+nmc.anneal_3Dlattice(config, charges, species)
 ```
 
-<br />
-<br />
+## Example Output
+The software produces:
+Convergence diagnostics
+* Phase and charge distributions
+* Synthetic NMR spectra
+* Structure files for further analysis
+Example figures are available in the examples/ directory.
 
-#### Generating and comparing 7Li MAS NMR Spectra
+## Model Overview
+* Structures are represented as a 3D NumPy lattice
+* Energy is defined using local oxygen charge balance
+* Simulated annealing models disorder formation during synthesis
+* A deterministic algorithm models electrochemical delithiation
+* Local lithium environments are used to generate synthetic ⁷Li MAS NMR spectra
 
-Lithium-7 NMR is an excellent probe of the local structure because each atom senses its six closest transition-metal neighbors (see reference above to Harris et al. and those therein for a full description). The exact shift introduced by each neighbor metal depends on its identity, its bond angle. They are also temperature dependent as well as bond length dependent, so you should treat minor variations of them as a fitting parameter. To generate a 7Li MAS NMR spectrum with a ppm axis as an array, specify the neighbor shift values as well as the full width at half maximum linewidth parameter. Optionally, you can specify a linear increase in FWHM as the central shift increases away from 0 ppm:
+## Package Structure
+nmc_anneal/
+│
+├── core/        # lattice, energy, annealing
+├── analysis/    # convergence, phase, NMR
+├── viz/         # plotting and GUI tools
+├── io/          # input parsing and configuration
+└── tests/       # automated tests
 
-```python
-from nmc_anneal.analysis.struct2nmr import get_all_nmr_shifts
+## Performance
+Typical simulations of a moderate lattice (e.g., 30×30×4) converge in minutes on a modern laptop. The process takes advantage of the natural translational symmetry for parallel computation in the vertical direction. Best performance will be found when the number of layers is equal to the number of available CPU cores.
 
-nmr_shifts_dict_90s = {
-        "Mn": 255,
-        "Ni2+": -25,
-}
+## Reproducibility
+Simulations are deterministic when a random seed is specified in the configuration file.
 
-nmr_shifts_dict_180s = {
-    "Mn": -52,
-    "Ni2+": 120,
-}
+## Documentation
+More detailed documentation is available in the docs/ directory:
+* Theory and physical model
+* Algorithm description
+* Input file format
+* Example workflows
+* API reference
 
-nmr_ppm_shifts = get_all_nmr_shifts(
-    whole_lattice_charges,
-    whole_lattice_species,
-    nmr_shifts_dict_90s,
-    nmr_shifts_dict_180s,
-)
+## Citation
+If you use this software in an academic work, please cite:
+*Structure Solution of Metal-Oxide Li Battery Cathodes from Simulated Annealing and Lithium NMR Spectroscopy* K. J. Harris, J. M. Foster, M. Z. Tessaro, M. Jiang, X. Yang, Y. Wu, B. Protas, and G. R. Goward *Chem. Mater.* 29, 5550−5557, **2017**.
 
-```
-<br />
-This digitized spectrum stored as an array can be plotted with any software you are familiar with, or with the "image_from_peaklist" function in viz.nmr_simpleplot directly in this package. You can also directly overlay this simulated spectrum with an experimental one stored in the same format using:
+## Requirements
+* Python ≥ 3.10
+* NumPy
+* Matplotlib (optional, for visualization)
+* PyQT (optional, for visualization)
 
-```python
-import nmc_anneal.viz.nmr_gui as NMRplot
+## Contributions
+Contributions are welcome.
+Before submitting a pull request:
+* Run formatting: ```black .```
+* Run linting: ```ruff check .```
+* Run type checking:```mypy src```
+* Run tests: ```pytest```
 
-data = np.load("examples/artifical_experimental_7LiNMR.npz")
-exp_ppm_axis = data["ppm_axis"]
-exp_intensities = data["intensities"]
+## Roadmap
+Planned future features include:
+* Pair distribution function (PDF) analysis
+* Diffraction simulation
+* Automated fitting to experimental NMR spectra
+* Expanded visualization tools
 
-datasets = {
-    "Simulation": (nmr_ppm_shifts[0], nmr_ppm_shifts[1]),
-    "Experiment": (exp_ppm_axis, exp_intensities),
-}
-
-NMRplot.run_peak_gui(datasets)
-```
-
-<br/>
-This allows you to change the lineshape parameters interactively to ensure an accurate fit of the model to the experimental data.
-
-Interface:
-![Phase Transition](docs/images/NMR_gui.png)
-
-<br />
-<br />
-
-## Implementation Details and Structure Conventions
-
-The chemical structure of layered NMC cathodes consists of alternating 2D sheets of transition metals alternating with 2D sheets of lithium atoms. These metal layers are separated by oxygen sheets. The oxygen sheets do not change in any across different stoichiometries or charge levels, so these are not represented internally. Calculations instead refer to virtual oxygen layers with the same structure for book-keeping purposes.
+## License
+MIT License
 
 
-The structure is represented internally as a stack of 2D arrays. Layer 0 is lithium, layer 1 transition metal, and so on.  This stack is stored as a 3D NumPy array with the 0th axis being the stacking axis. To speed up math on the charge checks while also tracking any cases where multiple metals have the same charge, a dual array is used. One with the atomic charges and one with the names of the ions.
-
-Ignoring vacancies and mixtures of TMs, the structure of these lattices is a simple FCC closest packing of spheres (see https://en.wikipedia.org/wiki/Close-packing_of_equal_spheres). In FCC, the layers stack with a repeating ABC, ABC, ABC, etc. order with, with each layer is shifted over 0.5 units along both the *a* and *b* directions (∠ *a*,*b* = 60 °). The third layer is shifted the same amount/direction. The first three layers therefore look like:
-
-![Layer Stacking](docs/images/Layer_Stacking.png)
-<br />
-
-The shift from the third layer to the fourth layer is such that the atomic positions overlay exactly with the positions of layer one. However, the code here uses the convention that the fourth layer of the periodic cell is diagonally shifted from layer one.  Therefore the bottom left atom of every layer depicted above is at index (L, a=0, b=0). Geometrically, index 0,0 of layer 1 is shifted +1*a*, +1*b* from the atom at index 0,0 of layer 0. This choice of unit cell means that every layer in a large stack are connected to the layers above/below in the exact same way, and nearest-neighbor calculations are very easily made periodic with modular arithmetic.  While the structure is stored as a 3D Numpy array that looks square, it represents a tilted parallelogram:
- ![Full 3D Stacking](docs/images/3Dlattice.png)
- 
- <br />
- <br />
- <br />
-
-The oxygen layers are chemically immutable, so there is no need to store them. However, bookkeeping requires a convention to refer to them for calculating nearest neighbors. Here, we use as a convention that oxygen-layer-0 is *between* metal-layer-0 (lithium layer) and metal-layer-1 (TM layer); i.e., oxygen layer 0 is physically between the metal layers desribed by [0,:,:] and [1,:,:] of the NumPy array. This means that every metal layer at vertical index *l* is sandwiched between oxygen layers with index (*l*-1) and (*l*), subject to periodicity when needed.
-
-Energy is here defined in terms of the oxygen atoms:
-(1) Each oxygen prefers a net +2 from the 6 metals surrounding it.
-(2) Each of those 6 metals has 5 *other* oxygens, so 1/6th of the charge of each neighboring metals contributes to the charge balance of a particular oxygen atom
-Therefore, the total energy equation is the average of all the oxygen atoms in the structure.
-
-Index shifts for nearest-neighbor oxygen atoms are coded explicitly in energy_calculations.py. Index shifts for the nearest-neighbor metals within a layer or in the layer above and below (those sharing an oxygen atom) are explicitly coded in charging_methods.py.
-
-## Planned Features
-
-### Analysis methods:
-- Pair distribution functions (from diffraction data)
-
+## Project Status
+This project is under active development and is currently focused on:
+* Core simulation stability
+* Scientific validation
+* Expanded analysis and visualization tools

@@ -1,9 +1,10 @@
 from pathlib import Path
-import numpy as np
-import nmc_anneal as nmc
 
-from nmc_anneal.analysis.struct2nmr import get_all_nmr_shifts
+import numpy as np
+
+import nmc_anneal as nmc
 import nmc_anneal.viz.nmr_gui as NMRplot
+from nmc_anneal.analysis.struct2nmr import get_all_nmr_shifts
 
 
 def main() -> None:

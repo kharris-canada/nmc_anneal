@@ -1,16 +1,15 @@
-from pathlib import Path
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
-from nmc_anneal import SimulationConfig
+from nmc_anneal.core.config import SimulationConfig
 
 
 def plot_energy_convergence_grid(
     config: SimulationConfig,
     anneal_type: str,
     trajectories: list,
-    step_counts: int,
-    final_avg_energies: float,
+    step_counts: list[int],
+    final_avg_energies: list[float],
     outfile: str,
 ):
     """
@@ -45,7 +44,6 @@ def plot_energy_convergence_grid(
 
     info_ax = axes[-1]
     for i, ax in enumerate(axes):
-
         if ax is info_ax:
             ax.axis("off")
             continue
