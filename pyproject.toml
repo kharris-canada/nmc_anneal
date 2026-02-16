@@ -8,12 +8,6 @@ license = {text = "MIT"}
 authors = [
     {name = "Kris Harris"}
 ]
-
-[build-system]
-requires = ["setuptools>=68.0"]
-build-backend = "setuptools.build_meta"
-
-
 dependencies = [
     "numpy>=1.23",
 ]
@@ -28,24 +22,26 @@ dev = [
 ]
 viz = ["matplotlib", "pyqt5"]
 
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
 [tool.setuptools]
 package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
-
+[tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
 addopts = "-ra"
-
 
 [tool.black]
 line-length = 88
 
 [tool.isort]
 profile = "black"
-
 
 [tool.ruff]
 line-length = 88
@@ -60,7 +56,6 @@ lint.select = [
 lint.ignore = [
     "E501",  # line length handled by black
 ]
-
 
 [tool.mypy]
 python_version = "3.11"
