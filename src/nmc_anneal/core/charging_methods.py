@@ -71,9 +71,9 @@ def delithiate(
         )
 
         # Stoichiometry calculations:
-        start_num_ni2 = np.count_nonzero(whole_lattice_species == "Ni2+")
+        start_num_ni2 = int(np.count_nonzero(whole_lattice_species == "Ni2+"))
 
-        start_num_co3 = np.count_nonzero(whole_lattice_species == "Co3+")
+        start_num_co3 = int(np.count_nonzero(whole_lattice_species == "Co3+"))
 
         num_ni2_to_ni4 = int(num_li_to_remove / 2)
 

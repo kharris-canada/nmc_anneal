@@ -182,7 +182,7 @@ def average_all_oxygen_energies(lattice_charges: ChargesLattice) -> float:
                     _single_oxygen_energy(width, lattice_charges, (i, j, k))
                 )
 
-    return energy_count / (width * width * tot_layers)
+    return float(energy_count / (width * width * tot_layers))
 
 
 def one_metal_layer_oxygen_energies(lattice_charges: ChargesLattice) -> float:
@@ -217,7 +217,7 @@ def one_metal_layer_oxygen_energies(lattice_charges: ChargesLattice) -> float:
                     _single_oxygen_energy(width, lattice_charges, (i, j, k))
                 )
 
-    return energy_count / (width * width * 2)
+    return float(energy_count / (width * width * 2))
 
 
 def energy_swap_two_metals(
