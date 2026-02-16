@@ -49,6 +49,8 @@ output_file = lattice_final.npy
 
 ```python
 
+import nmc_anneal as nmc
+
 #Load stoichiometry
 config = nmc.parse_input_file(Path("input.txt"))
 
@@ -70,7 +72,10 @@ The number of steps required depends on the atoms present as well as the size of
 
 Example:
 ```python
-nmc.find_and_plot_convergence(
+
+from nmc_anneal.analysis.convergence_check import find_and_plot_convergence   # requires matplotlib
+
+find_and_plot_convergence(
     config,
     whole_lattice_charges,
     whole_lattice_species,
@@ -88,7 +93,9 @@ Results:
 ## Observing Phase Transitions
 Since the real world versions of these materials are generally quickly quenched from their high synthesis temperature, one is generally interested in tracking the behavior at different levels of disorder. It can be useful to generate a phase diagram with:
 ```python
-nmc.get_phase_diagram(
+from nmc_anneal.analysis.get_phase_diagram import get_phase_diagram # requires matplotlib
+
+get_phase_diagram(
     config,
     whole_lattice_charges,
     whole_lattice_species,
@@ -151,6 +158,9 @@ The digital list of peak positions can be converted to a full NMR spectrum by pa
 
 Example:
 ```python
+
+from nmc_anneal.viz.nmr_simpleplot import image_from_peaklist # requires matplotlib
+
 image_from_peaklist(
     data=nmr_ppm_shifts,
     percent_gaussian=50,
@@ -163,10 +173,16 @@ image_from_peaklist(
 )
 ```
 
-You can also iteratively adjust the linewidth parameters through comparison to an experimental spectrum (stored as a numpy arrays for intensity and axis) using the gui run_peak_gui():
+Result:
+![image](images/2D_simple_nmr_plot.png)
+
+
+## GUI for adjusting <sup>7</sup>Li NMR Spectra
+
+You can also iteratively adjust the linewidth parameters through comparison to an experimental spectrum (stored as a numpy arrays for intensity and axis) using run_peak_gui():
 
 ```python
-import nmc_anneal.viz.nmr_gui as NMRplot
+import nmc_anneal.viz.nmr_gui as NMRplot  # requires PyQT
 
 data = np.load("examples/artifical_experimental_7LiNMR.npz")
 exp_ppm_axis = data["ppm_axis"]

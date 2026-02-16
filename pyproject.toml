@@ -1,6 +1,6 @@
 [project]
 name = "nmc_anneal"
-version = "0.1.0"
+version = "0.3.4"
 description = "Anneal Ni/Mn/Co layered oxide material structures and analyze them"
 readme = "README.md"
 requires-python = ">=3.10"

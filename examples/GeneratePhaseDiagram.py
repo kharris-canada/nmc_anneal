@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import nmc_anneal as nmc
+from nmc_anneal.analysis.get_phase_diagram import get_phase_diagram
 
 
 def main() -> None:
@@ -19,7 +20,7 @@ def main() -> None:
         graph_energy=False,
     )
 
-    nmc.get_phase_diagram(
+    get_phase_diagram(
         config,
         whole_lattice_charges,
         whole_lattice_species,

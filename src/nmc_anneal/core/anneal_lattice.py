@@ -255,7 +255,7 @@ def _anneal_2D(
         )
 
     energies = np.zeros(101)
-    checkpoint_interval = max(1, n_steps // 100)
+    checkpoint_interval = int(max(1, n_steps // 100) + 1)
 
     layer_to_anneal = 1  # always central layer of sandwich
     for curr_step in range(0, n_steps + 1):
@@ -316,13 +316,13 @@ def _anneal_2D(
             if curr_step % checkpoint_interval == 0:
                 current_percent_idx = int(curr_step / checkpoint_interval)
                 if curr_step != n_steps:
-                    energies[current_percent_idx] = (
-                        encalc.one_metal_layer_oxygen_energies(lattice_charges)
-                    )
+                    energies[
+                        current_percent_idx
+                    ] = encalc.one_metal_layer_oxygen_energies(lattice_charges)
                 else:
-                    energies[(len(energies) - 1)] = (
-                        encalc.one_metal_layer_oxygen_energies(lattice_charges)
-                    )
+                    energies[
+                        (len(energies) - 1)
+                    ] = encalc.one_metal_layer_oxygen_energies(lattice_charges)
 
     return (
         idx_anneal_layer,

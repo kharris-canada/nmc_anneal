@@ -1,7 +1,5 @@
-__version__ = "0.3.3"
+__version__ = "0.3.4"
 
-from .analysis.convergence_check import find_and_plot_convergence
-from .analysis.get_phase_diagram import get_phase_diagram
 from .core.anneal_lattice import anneal_3Dlattice
 from .core.charging_methods import delithiate
 from .core.config import SimulationConfig

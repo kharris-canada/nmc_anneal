@@ -126,9 +126,12 @@ def image_from_peaklist(
     ax.xaxis.set_inverted(
         True
     )  # Convention in NMR is to plot decreasing ppm to the right (backwards of normal graphs)
-    ax.set_xlabel("Shift")
-    ax.set_ylabel("Intensity")
-    ax.set_title("Summed pseudo-Voigt spectrum")
+    ax.set_xlabel("Chemical Shift (ppm)")
+    ax.set_title("Predicted 7Li MAS NMR Spectrum")
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.spines["left"].set_visible(False)
+    plt.yticks([])  # Hide y-axis ticks since they are arbitrary units
 
     plt.tight_layout()
 
