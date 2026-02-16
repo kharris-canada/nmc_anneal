@@ -172,8 +172,8 @@ def delithiate(
     # (3) only after all Ni2+ converted to Ni4+, begin converting Co3+ to Co4+
     if config.oxidation_model == "ni_2to3_ni_3to4_co_3to4":
         # Stoichiometry calculations:
-        start_num_ni2 = np.count_nonzero(whole_lattice_species == "Ni2+")
-        start_num_co3 = np.count_nonzero(whole_lattice_species == "Co3+")
+        start_num_ni2 = int(np.count_nonzero(whole_lattice_species == "Ni2+"))
+        start_num_co3 = int(np.count_nonzero(whole_lattice_species == "Co3+"))
 
         if num_li_to_remove <= start_num_ni2:
             num_ni2_to_ni3 = num_li_to_remove
@@ -357,9 +357,9 @@ def delithiate(
         )
 
         # Stoichiometry calculations:
-        start_num_ni2 = np.count_nonzero(whole_lattice_species == "Ni2+")
+        start_num_ni2 = int(np.count_nonzero(whole_lattice_species == "Ni2+"))
 
-        start_num_co3 = np.count_nonzero(whole_lattice_species == "Co3+")
+        start_num_co3 = int(np.count_nonzero(whole_lattice_species == "Co3+"))
 
         num_ni2_to_ni3 = np.minimum(num_li_to_remove, start_num_ni2)
 

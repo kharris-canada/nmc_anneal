@@ -1,4 +1,4 @@
-__version__ = "0.3.2"
+__version__ = "0.3.3"
 
 from .analysis.convergence_check import find_and_plot_convergence
 from .analysis.get_phase_diagram import get_phase_diagram
