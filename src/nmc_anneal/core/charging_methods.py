@@ -19,23 +19,27 @@ def delithiate(
     frac_li_to_remove: float,
 ):
     """
-    Remove the number of lithium atoms specified
-    Also oxidize the correct number of transition metals for charge balance
-    (number/type of TMs oxidized varies according to method stored in config.oxidation_model)
+    Remove lithium atoms and oxidize transition metals to maintain charge balance.
 
+    Removes a specified fraction of lithium atoms from the structure and oxidizes the corresponding
+    number of transition metals (Ni, Co) according to the oxidation model specified in config.
+    The Li layer is assumed to rearrange deterministically to find the lowest energy configuration.
 
-    Li layer is assumed to be mobile enough that Li + vacancies slide around to find the lowest energy position deterministically rather than stochastically
-    algorithm here finds that by looking at nearest neighbors
+    Args:
+        config (SimulationConfig): Data class containing simulation parameters and oxidation model selection.
+        whole_lattice_charges (ChargesLattice): 3D array of all charges in structure with proper geometry.
+        whole_lattice_species (SpeciesLattice): 3D array of all ion names in structure with proper geometry.
+        frac_li_to_remove (float): Fraction of lithium atoms to remove (between 0 and 1).
 
-    :param config: Description
-    :type config: SimulationConfig
-    :param whole_lattice_charges: Array containing all charges in structure in the correct geometry. Formatted as in initialize_lattice.py.
-    :type whole_lattice_charges: np.ndarray
-    :param whole_lattice_species: Array containing all names the ions in structure in the correct geometry. Formatted as in initialize_lattice.py.
-    :type whole_lattice_species: np.ndarray
-    :param num_li_to_remove: The number of lithium atoms to remove (specific count, not fraction or empirical formula terms)
-    :type num_li_to_remove: int
+    Raises:
+        ValueError: If requested lithium removal exceeds the number of Li atoms present.
+        ValueError: If requested redox stoichiometry cannot be satisfied by available metals.
     """
+
+    if config.random_seed is not None:
+        rng = np.random.default_rng(config.random_seed)
+    else:
+        rng = np.random.default_rng()
 
     # Convert fraction of Li to remove to integer number to remove
     # (while forcing to be even number in case methods require one TM per two Li)
@@ -102,6 +106,7 @@ def delithiate(
                 list_to_update=energies_1plus,
                 update_list_redox_starting_charge=1,
                 update_list_redox_ending_charge=0,
+                rng=rng,
             )
 
             # remove the two Li atoms to charge balance and update Li and Ni2+ oxidation energy lists
@@ -117,6 +122,7 @@ def delithiate(
                     list_to_update=energies_2plus,
                     update_list_redox_starting_charge=2,
                     update_list_redox_ending_charge=4,
+                    rng=rng,
                 )
 
             energies_2plus.sort(key=lambda row: row[3], reverse=True)
@@ -147,6 +153,7 @@ def delithiate(
                 list_to_update=energies_1plus,
                 update_list_redox_starting_charge=1,
                 update_list_redox_ending_charge=0,
+                rng=rng,
             )
 
             # remove one Li atom to charge balance and update Li and Co3+ oxidation energy lists
@@ -160,6 +167,7 @@ def delithiate(
                 list_to_update=co_energies_3plus,
                 update_list_redox_starting_charge=3,
                 update_list_redox_ending_charge=4,
+                rng=rng,
             )
 
             co_energies_3plus.sort(key=lambda row: row[3], reverse=True)
@@ -227,6 +235,7 @@ def delithiate(
                 list_to_update=energies_1plus,
                 update_list_redox_starting_charge=1,
                 update_list_redox_ending_charge=0,
+                rng=rng,
             )
 
             # remove one Li atom to charge balance and update Li and Ni2+ oxidation energy lists
@@ -240,6 +249,7 @@ def delithiate(
                 list_to_update=energies_2plus,
                 update_list_redox_starting_charge=2,
                 update_list_redox_ending_charge=3,
+                rng=rng,
             )
 
             energies_2plus.sort(key=lambda row: row[3], reverse=True)
@@ -270,6 +280,7 @@ def delithiate(
                 list_to_update=energies_1plus,
                 update_list_redox_starting_charge=1,
                 update_list_redox_ending_charge=0,
+                rng=rng,
             )
 
             # remove one Li atom to charge balance and update Li and Ni3+ oxidation energy lists
@@ -283,6 +294,7 @@ def delithiate(
                 list_to_update=ni_energies_3plus,
                 update_list_redox_starting_charge=3,
                 update_list_redox_ending_charge=4,
+                rng=rng,
             )
 
             ni_energies_3plus.sort(key=lambda row: row[3], reverse=True)
@@ -313,6 +325,7 @@ def delithiate(
                 list_to_update=energies_1plus,
                 update_list_redox_starting_charge=1,
                 update_list_redox_ending_charge=0,
+                rng=rng,
             )
 
             # remove one Li atom to charge balance and update Li and Co3+ oxidation energy lists
@@ -326,6 +339,7 @@ def delithiate(
                 list_to_update=co_energies_3plus,
                 update_list_redox_starting_charge=3,
                 update_list_redox_ending_charge=4,
+                rng=rng,
             )
 
             co_energies_3plus.sort(key=lambda row: row[3], reverse=True)
@@ -389,6 +403,7 @@ def delithiate(
                 list_to_update=energies_1plus,
                 update_list_redox_starting_charge=1,
                 update_list_redox_ending_charge=0,
+                rng=rng,
             )
 
             # remove the two Li atoms to charge balance and update Li and Ni2+ oxidation energy lists
@@ -403,6 +418,7 @@ def delithiate(
                 list_to_update=energies_2plus,
                 update_list_redox_starting_charge=2,
                 update_list_redox_ending_charge=3,
+                rng=rng,
             )
 
             energies_2plus.sort(key=lambda row: row[3], reverse=True)
@@ -432,6 +448,7 @@ def delithiate(
                 list_to_update=energies_1plus,
                 update_list_redox_starting_charge=1,
                 update_list_redox_ending_charge=0,
+                rng=rng,
             )
 
             # remove the two Li atoms to charge balance and update Li and Ni2+ oxidation energy lists
@@ -446,6 +463,7 @@ def delithiate(
                 list_to_update=energies_3plus,
                 update_list_redox_starting_charge=3,
                 update_list_redox_ending_charge=4,
+                rng=rng,
             )
 
             energies_3plus.sort(key=lambda row: row[3], reverse=True)
@@ -462,22 +480,21 @@ def _get_energy_list(
     layers_to_tabulate: list,
 ) -> list:
     """
-    Make a list of all the energies for the metal layers with the format: [[layer_index, index_i, index_j], metal_energy]
-    for speed, uses np.where which only addresses those of the correct charge
-    Returns list sorted by the value of the site energy
+    Generate a sorted list of redox energies for metal sites with a given charge state.
 
-    Not really using layers_to_tabulate in other functions calling this so far, but may include other redox methods that need that later
+    Identifies all metal sites with the specified charge and calculates the redox energy
+    for each site if the charge were changed to the proposed new charge. Returns a list
+    sorted by redox energy (lowest energy first).
 
-    :param whole_lattice_charges: Array containing all charges in structure in the correct geometry. Formatted as in initialize_lattice.py.
-    :type whole_lattice_charges: np.ndarray
-    :param charge_to_tabulate: The "before" charge of the redox change to tabulate
-    :type charge_to_tabulate: int
-    :param proposed_new_charge: The "after" charge of the redox change to tabulate
-    :type proposed_new_charge: int
-    :param layers_to_tabulate: layers inside "whole_lattice_charges" to include in redox energy tabulation
-    :type layers_to_tabulate: list
-    :return: formatted list of site addresses and redox energies
-    :rtype: list
+    Args:
+        whole_lattice_charges (ChargesLattice): 3D array of all charges in structure with proper geometry.
+        whole_lattice_species (SpeciesLattice): 3D array of all ion names in structure with proper geometry.
+        charge_to_tabulate (int): Current charge state to search for.
+        proposed_new_charge (int): Target charge state for redox energy calculation.
+        layers_to_tabulate (list[int]): Layer indices to include in the tabulation.
+
+    Returns:
+        list[list]: Each element is [layer_idx, x, y, redox_energy, atom_name], sorted by redox_energy descending.
     """
 
     energies = []
@@ -502,15 +519,20 @@ def _get_energy_list(
 
 def _rndm_idx_lowestE(
     energylist: list,
+    rng: np.random.Generator,
 ) -> int:
     """
-    Check the list of redox energies and randomly select one of the degenerate lowest energies
-    Note: this assumes list is already sorted with least favorable energy at list entry 0
+    Randomly select one site from a list of energetically degenerate lowest-energy sites.
 
-    :param energylist: formatted list of site addresses and redox energies
-    :type energylist: list
-    :return: index of energy list entry selected
-    :rtype: int
+    When multiple sites have the same lowest redox energy, this function randomly selects one
+    of them to prevent bias in site selection. Assumes the list is pre-sorted with lowest
+    energies first.
+
+    Args:
+        energylist (list[list]): Sorted list of [layer_idx, x, y, energy, atom_name] entries.
+
+    Returns:
+        int: Index of the randomly selected entry in the energy list.
     """
 
     top_energy = energylist[0][3]
@@ -521,10 +543,11 @@ def _rndm_idx_lowestE(
             break
         last_index = i
 
-    # pick one site at random
-    selected_row = random.randint(0, last_index)
-
-    return selected_row
+    if last_index == 0:
+        return 0
+    else:
+        selected_row = int(rng.integers(0, last_index))
+        return selected_row
 
 
 def _redox_and_update2lists(
@@ -537,34 +560,31 @@ def _redox_and_update2lists(
     list_to_update: list,
     update_list_redox_starting_charge: int,
     update_list_redox_ending_charge: int,
+    rng: np.random.Generator,
 ):
     """
-    Docstring for _redox_and_update2lists
+    Perform a redox reaction at the lowest-energy site and update affected energy lists.
 
-    :param whole_lattice_charges:  Array containing all charges in structure in the correct geometry. Formatted as in initialize_lattice.py.
-    :type whole_lattice_charges: np.ndarray
-    :param whole_lattice_species: Array containing all names the ions in structure in the correct geometry. Formatted as in initialize_lattice.py.
-    :type whole_lattice_species: np.ndarray
-    :param list_to_oxidize: formatted list of site addresses and redox energies for a particular redox change: ox. site removed, others updated
-    :type list_to_oxidize: list
-    :param redox_starting_charge: starting charge of the one site oxidized AND the starting charge for redox in the same list
-    :type redox_starting_charge: int
-    :param redox_ending_charge: ending charge of the one site oxidized AND the ending charge for redox in the same list
-    :type redox_ending_charge: int
-    :param redox_ending_name: ending ion name of the one site oxidized
-    :type redox_ending_name: str
-    :param list_to_update: formatted list of site addresses and redox energies for a particular redox change: updated *after* the oxidation
-    :type list_to_update: list
-    :param update_list_redox_starting_charge: starting charge of the redox change in the list to update
-    :type update_list_redox_starting_charge: int
-    :param update_list_redox_ending_charge:  ending charge of the redox change in the list to update
-    :type update_list_redox_ending_charge: int
+    Selects the lowest-energy site from list_to_oxidize, performs the redox change, updates
+    the species and charge lattices, and recalculates redox energies for all neighboring sites
+    that may be affected by the charge change.
+
+    Args:
+        whole_lattice_charges (ChargesLattice): 3D array of all charges in structure with proper geometry.
+        whole_lattice_species (SpeciesLattice): 3D array of all ion names in structure with proper geometry.
+        list_to_oxidize (list[list]): Energy list for sites to oxidize (entry removed after selection).
+        redox_starting_charge (int): Initial charge state of the site being oxidized.
+        redox_ending_charge (int): Final charge state of the site being oxidized.
+        redox_ending_name (str): Ion name for the oxidized species (e.g., "Ni4+", "Co4+", "Vac").
+        list_to_update (list[list]): Energy list for sites whose energies must be recalculated.
+        update_list_redox_starting_charge (int): Initial charge state for energies in list_to_update.
+        update_list_redox_ending_charge (int): Final charge state for energies in list_to_update.
     """
 
     width = whole_lattice_charges.shape[1]
     num_li_plus_tm_layers = whole_lattice_charges.shape[0]
     # randomly select one entry equal to the lowest energy in the redox list:
-    list_row_to_remove = _rndm_idx_lowestE(list_to_oxidize)
+    list_row_to_remove = _rndm_idx_lowestE(list_to_oxidize, rng)
     indices_of_removed = list_to_oxidize[list_row_to_remove][0:3]
 
     whole_lattice_charges[tuple(indices_of_removed)] = redox_ending_charge
@@ -626,22 +646,19 @@ def _get_neighbor_indices(
     num_li_plus_tm_layers: int,
 ) -> list:
     """
-    Produce list that has the addresses of neighboring metal sites which can have their energies
-    affected by a change in the charge of the metal located at start_index.
+    Generate neighbor indices for a metal site accounting for periodic boundary conditions.
 
-    List includes the addresses of affected neighbors in only one particular layer per call (that layer must be named)
+    Returns the addresses of all neighboring metal sites in a specified layer relative to
+    start_index. Accounts for periodicity in both vertical (layer) and horizontal (x,y) directions.
 
-    Also corrects for periodicity in vertical (stacking) direction and horizontal direction, so needs dimensions.
+    Args:
+        layer_name (str): Which layer to get neighbors from: "same layer", "up layer", or "down layer".
+        start_index (tuple[int, int, int]): Reference position (layer_idx, x, y).
+        lattice_width (int): Width of the square 2D layers.
+        num_li_plus_tm_layers (int): Total number of layers in the 3D structure.
 
-    :param layer_name: Name of layer to produce addresses for ("same_layer"|"up layer"|"down layer")
-    :type layer_name: str
-    :param start_index: Description
-    :param lattice_width: width of the square 2D layers
-    :type lattice_width: int
-    :param num_li_plus_tm_layers: Height of the stack of layers (sum of Li and TM layers)
-    :type num_li_plus_tm_layers: int
-    :return: list of neighbor metal addresses in just one of 3 possible layers
-    :rtype: list
+    Returns:
+        list[tuple[int, int, int]]: List of neighbor coordinates with periodic boundaries applied.
     """
 
     shifts_by_layer = {
@@ -693,20 +710,17 @@ def _update_en_list(
     locations_to_check: list,
 ):
     """
-    Updates the energies_list entries specified in the list of addresses specified in the locations_to_check list
+    Update redox energies for specific sites in an energy list.
 
-    Expects that all of the indices in that list have already been corrected for periodicity!
+    Recalculates redox energies for sites at specified locations and updates their entries
+    in the energy list. Used after a redox event to account for changed charge environments.
 
-    :param whole_lattice_charges: Array containing all charges in structure in the correct geometry. Format as in initialize_lattice.py.
-    :type whole_lattice_charges: np.ndarray
-    :param redox_starting_charge: the "before" charge redox is calculated for
-    :type redox_starting_charge: int
-    :param redox_ending_charge: the "after" charge redox is calculated for
-    :type redox_ending_charge: int
-    :param energies_list: formatted list of site addresses and redox energies for a particular redox change
-    :type energies_list: list
-    :param locations_to_check: Only the site addresses in this list checked to update redox energies
-    :type locations_to_check: list
+    Args:
+        whole_lattice_charges (ChargesLattice): 3D array of all charges in structure with proper geometry.
+        redox_starting_charge (int): Initial charge state for redox energy calculation.
+        redox_ending_charge (int): Final charge state for redox energy calculation.
+        energies_list (list[list]): Mutable list of [layer_idx, x, y, energy] entries to update in-place.
+        locations_to_check (list[tuple]): Coordinates of sites to recalculate (indices already corrected for periodicity).
     """
 
     new_energies_list = []

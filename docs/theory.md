@@ -55,22 +55,28 @@ This produces physically realistic cation ordering and clustering.
 
 ## Delithiation Model
 
-Lithium extraction is simulated using a deterministic local-energy-driven algorithm:
+Lithium extraction is simulated using a deterministic local-energy-driven algorithm using the neighboring oxygen atoms.
 
 - Lithium removed from highest-energy local environments first
-- Generates evolving lithium distributions across the lattice
+- The next move when degenerate energies occur are randomly selected
+- This oxidation/delithiation generates evolving lithium distributions across the lattice
+
+Three models for the oxidation steps are provided for the user to test:
+* Ni<sup>2+</sup> directly to >Ni<sup>4+</sup> (and then followed by Co<sup>3+</sup> if at extremely high capacity). Oxidation model = "ni_2to4_co_3to4"
+* Ni<sup>2+</sup> to Ni<sup>3+</sup>, and then once complete, Ni<sup>3+</sup> directly to Ni<sup>4+</sup> begins (and Co<sup>3+</sup> if needed). Oxidation model = "ni_2to3_ni_3to4_co_3to4"
+* Ni<sup>2+</sup> to Ni<sup>3+</sup>, and then once complete, EITHER Ni<sup>3+</sup> directly to Ni<sup>4+</sup> or Co<sup>3+</sup> to Co<sup>4+</sup> according to oxygen energy at each atomic step. Oxidation model = "ni_2to3_any_3to4"
 
 ---
 
 ## NMR Model
 
-Synthetic **⁷Li MAS NMR spectra** are generated from local lithium environments.
+Synthetic **⁷Li MAS NMR spectra** are generated from local lithium environments. These are determined by the identity and geometric connection to nearest-neighbor TM atoms (see Harris et al., Chem. Mater. 2017, 29, 5550; Zeng et al.,  Chem. Mater. 2007, 19, 6277; Grey et al., Chem. Rev. 2004, 104, 4493 and references therein). The current version of the code assumes any Li atoms you place in the nominally TM layer behave the same as those in the nominally Li layer, which needs experimental data and can then be improved. It is best to consider these shifts as fitting parameters within a small range because they are certainly temperature dependent (and thereby MAS-rate dependent), and may differ between samples.
 
-Each lithium site contributes a resonance based on:
+Each lithium site contributes a single resonance based on:
 
-- Neighboring transition metals
-- Local charge distribution
-- Coordination environment
+- \# and identity of TMs at 90 bond angles in neighboring layers
+- \# and identity of TMs at 180 bond angles in neighboring layers
+- \# and identity of TMs at 90 bond angles in the same layer (it is more common to not have Li and TM in the same layer, see Li2MnO3 literature for a well known case to test on though)
 
 The final spectrum is constructed by summing contributions from all lithium sites.
 
@@ -78,7 +84,7 @@ The final spectrum is constructed by summing contributions from all lithium site
 
 ## Model Limitations
 
-- No long-range electrostatics
+- No long-range electrostatics (particularly TM-layer to TM-layer forces which order Li2MnO3 and variants, but are clearly quite weak and may not affect quenched samples)
 - No mixed oxidation states or oxygen participation in electrochemistry
 - No local structural distortions
 - Not a full DFT model

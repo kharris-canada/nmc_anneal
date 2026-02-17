@@ -110,11 +110,8 @@ Example:
 ![image](images/phase_diagram.png)
 
 ## Electrochemical Delithiation
-The amount of lithium atoms (and corresponding electrons) to remove are specified as a fraction of the empirical chemical formula using the "frac_li_to_remove" argument to the delithiate() function.  Three models for the oxidation steps are provided for testing, and one must be specified in the input text file (stored in the SimulationConfig object).
-* Ni2+ directly to Ni4+ (and then followed by Co3 if at extremely high capacity). Oxidation model = "ni_2to4_co_3to4".
-* Ni2+ to Ni3+, and then once complete, Ni3+ directly to Ni4+ begins (and Co3+ if needed). Oxidation model = "ni_2to3_ni_3to4_co_3to4".
-* Ni2+ to Ni3+, and then once complete, EITHER Ni3+ directly to Ni4+ or Co3+ to Co4+ according to oxygen energy at each atomic step. Oxidation model = "ni_2to3_any_3to4".
-This model is
+The amount of lithium atoms (and corresponding electrons) to remove are specified as a fraction of the empirical chemical formula using the "frac_li_to_remove" argument to the delithiate() function.  Three models for the oxidation steps are provided for testing, and one must be specified in the input text file (stored in the SimulationConfig object). Options are: ni_2to4_co_3to4 | ni_2to3_ni_3to4_co_3to4 | ni_2to3_any_3to4.
+
 
 Example:
 
@@ -146,12 +143,18 @@ nmr_shifts_dict_180s = {
     "Ni2+": 120,
 }
 
-nmr_ppm_shifts = get_all_nmr_shifts(
-    whole_lattice_charges,
-    whole_lattice_species,
-    nmr_shifts_dict_90s,
-    nmr_shifts_dict_180s,
-)
+nmr_shifts_dict_inlayer = {
+        "Mn": 255,
+        "Ni2+": -25,
+    }
+
+    nmr_ppm_shifts = get_all_nmr_shifts(
+        whole_lattice_charges,
+        whole_lattice_species,
+        nmr_shifts_dict_90s,
+        nmr_shifts_dict_180s,
+        nmr_shifts_dict_inlayer,
+    )
 ```
 
 The digital list of peak positions can be converted to a full NMR spectrum by passing that list and lineshape parameters to image_from_peaklists(). Note that the percent Gaussian vs Lorentzian must be specified as well as the full linewidth at half maximum (fwhm). Optionally, it is possible to have linewidths increase as the peaks become paramagnetically shifted further from 0 ppm by setting the the linear scale variable to a value other than 0. 

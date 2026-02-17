@@ -7,10 +7,23 @@ from nmc_anneal.core.config import SimulationConfig
 
 def parse_input_file(path: Path) -> SimulationConfig:
     """
-    Parse a key = value input file and store result as SimulationConfig class.
+    Parse a configuration file and return a validated SimulationConfig object.
 
-    All lines beginning with '#' or empty lines are ignored.
+    Reads a key=value format text file, ignoring comments and blank lines. Converts values
+    to appropriate types and validates the resulting configuration.
+
+    Args:
+        path (Path): Path to the configuration file.
+
+    Returns:
+        SimulationConfig: Validated configuration data class.
+
+    Raises:
+        FileNotFoundError: If the configuration file does not exist.
+        ValueError: If any required key is missing or value is invalid.
+        KeyError: If a required configuration parameter is missing.
     """
+
     raw_values = _read_key_value_file(path)
     config = _build_config(raw_values)
     _validate_config(config)
@@ -19,6 +32,22 @@ def parse_input_file(path: Path) -> SimulationConfig:
 
 # Read in input text file and store values as key/value pairs in a dict
 def _read_key_value_file(path: Path) -> dict[str, str]:
+    """
+    Read a key=value text file into a dictionary.
+
+    Parses a configuration file with lines in the format "key = value". Comments (lines
+    starting with '#') and blank lines are ignored.
+
+    Args:
+        path (Path): Path to the configuration file.
+
+    Returns:
+        dict[str, str]: Dictionary mapping configuration keys to their string values.
+
+    Raises:
+        FileNotFoundError: If the file does not exist.
+        ValueError: If any line is malformed (missing '=' separator).
+    """
     if not path.exists():
         raise FileNotFoundError(f"Input file not found: {path}")
 
@@ -45,6 +74,22 @@ def _read_key_value_file(path: Path) -> dict[str, str]:
 
 # Convert the key/value dict pairs to proper types and store in SimulationConfig class
 def _build_config(values: dict[str, str]) -> SimulationConfig:
+    """
+    Build a SimulationConfig from a dictionary of string values.
+
+    Converts string values from the input file to appropriate Python types and constructs
+    a SimulationConfig data class with sensible defaults for optional parameters.
+
+    Args:
+        values (dict[str, str]): Dictionary of configuration key-value pairs.
+
+    Returns:
+        SimulationConfig: Configuration object with all required fields populated.
+
+    Raises:
+        KeyError: If any required configuration key is missing.
+        ValueError: If any value cannot be converted to the expected type.
+    """
     try:
         return SimulationConfig(
             # Lattice
@@ -96,6 +141,18 @@ def _build_config(values: dict[str, str]) -> SimulationConfig:
 
 # helper to make sure no error if optional keys aren't present
 def _parse_optional_int(value: str | None) -> int | None:
+    """
+    Parse an optional integer value from a string.
+
+    Args:
+        value (str | None): String representation of an integer, or None.
+
+    Returns:
+        int | None: Parsed integer value, or None if input is None.
+
+    Raises:
+        ValueError: If value cannot be converted to an integer.
+    """
     if value is None:
         return None
     return int(value)
@@ -103,6 +160,18 @@ def _parse_optional_int(value: str | None) -> int | None:
 
 ###Section to validate system described in input file
 def _validate_config(config: SimulationConfig) -> None:
+    """
+    Validate all aspects of a SimulationConfig object.
+
+    Performs comprehensive checks on lattice dimensions, composition fractions, charge balance,
+    electrochemistry parameters, and output configuration.
+
+    Args:
+        config (SimulationConfig): Configuration to validate.
+
+    Raises:
+        ValueError: If any validation check fails.
+    """
     _validate_lattice(config)
     _validate_composition(config)
     _validate_electrochemistry(config)
@@ -111,6 +180,15 @@ def _validate_config(config: SimulationConfig) -> None:
 
 # Make sure lattice physically possible
 def _validate_lattice(config: SimulationConfig) -> None:
+    """
+    Validate lattice dimensions in the configuration.
+
+    Args:
+        config (SimulationConfig): Configuration to validate.
+
+    Raises:
+        ValueError: If width or n_layers is not positive.
+    """
     if config.width <= 0:
         raise ValueError(
             "Lattice horizontal size is (width x width), so they must be positive integers"
@@ -121,6 +199,18 @@ def _validate_lattice(config: SimulationConfig) -> None:
 
 # Make sure occupations physically possible (any amount of vacancies currently allowed in code, maybe not in real life)
 def _validate_composition(config: SimulationConfig) -> None:
+    """
+    Validate that atomic composition fractions are physically reasonable.
+
+    Checks that all fractional occupancies are between 0 and 1, and that Li layer and TM layer
+    fractions sum to approximately 1.0. Also verifies overall charge balance.
+
+    Args:
+        config (SimulationConfig): Configuration to validate.
+
+    Raises:
+        ValueError: If fractional occupancies are invalid or if charge balance fails.
+    """
     li_layer_fractional_vars = [
         config.li_fraction_li_layer,
         config.mn_fraction_li_layer,
@@ -181,6 +271,15 @@ def _validate_composition(config: SimulationConfig) -> None:
 
 # Make sure delithiation procedure is sensible and defined
 def _validate_electrochemistry(config: SimulationConfig) -> None:
+    """
+    Validate the oxidation model selection in the configuration.
+
+    Args:
+        config (SimulationConfig): Configuration to validate.
+
+    Raises:
+        ValueError: If oxidation_model is not one of the allowed options.
+    """
     allowed_ox_models = {
         "ni_2to4_co_3to4",
         "ni_2to3_ni_3to4_co_3to4",
@@ -191,6 +290,17 @@ def _validate_electrochemistry(config: SimulationConfig) -> None:
 
 
 def _validate_output(config: SimulationConfig) -> None:
+    """
+    Validate output configuration parameters.
+
+    Checks that random_seed (if provided) is non-negative and that output file has .npy extension.
+
+    Args:
+        config (SimulationConfig): Configuration to validate.
+
+    Raises:
+        ValueError: If random_seed is negative or output file extension is invalid.
+    """
     if config.random_seed is not None and config.random_seed < 0:
         raise ValueError("random_seed must be a non-negative integer")
 

@@ -10,7 +10,7 @@ The annealing algorithm models disorder formation through stochastic local swaps
 2. Attempt species swap
 3. Compute local energy change
 4. Accept or reject using Metropolis criterion
-5. Gradually reduce temperature
+5. Gradually change temperature according to user-selected path
 
 ### Properties
 

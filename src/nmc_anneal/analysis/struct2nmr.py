@@ -13,6 +13,7 @@ def get_all_nmr_shifts(
     whole_lattice_species: SpeciesLattice,
     nmr_shifts_dict_90s: dict,
     nmr_shifts_dict_180s: dict,
+    nmr_shifts_dict_inlayer: dict,
 ) -> tuple[np.ndarray, np.ndarray]:
     """
     Reads in a structure and calculates the chemical shift of every Li from the table of values. Many atoms will have the same nmr shift, so these are
@@ -21,15 +22,19 @@ def get_all_nmr_shifts(
     May have to play around with the exact chemical shifts, because these are temperature dependent.
 
     Args:
-        whole_lattice_charges (np.ndarray): Array containing all charges in structure in the correct geometry. Formatted as in initialize_lattice.py.
-        whole_lattice_species (np.ndarray): Array containing all ion names in structure in the correct geometry. Formatted as in initialize_lattice.py.
+        whole_lattice_charges (ChargesLattice): 3D array of all charges with proper geometry. Not strictly needed for current algorithm, but may be useful in extensions.
+        whole_lattice_species (SpeciesLattice): 3D array of all ion names with proper geometry.
+        nmr_shifts_dict_90s (dict): Chemical shifts (ppm) for 90° bonds; keys are TM names (e.g., "Ni2+", "Mn").
+        nmr_shifts_dict_180s (dict): Chemical shifts (ppm) for 180° bonds; keys are TM names.
+        nmr_shifts_dict_inlayer (dict): Chemical shifts (ppm) for in-layer bonds; keys are TM names. By geometry, these are connected by TWO 90 degree pathways.
 
     Returns:
-        tuple[np.ndarray, np.ndarray]: 1st array is list of all the nmr chemical shifts present, 2nd array is their frequency of occurence
+        tuple[np.ndarray, np.ndarray]: (unique_shifts, counts) where unique_shifts are the distinct shifts in ppm and counts are their frequencies.
     """
 
     # The dict objects should contain the 7Li nmr chemical shifts in ppm caused by the nearest-neighbor
-    # TM atoms bonded through an oxygen atom along a straight (180 deg) or bent (90 deg) bond
+    # TM atoms bonded through an oxygen atom along a straight (180 deg) or bent (90 deg) bond if up a layer or down a layer
+    # Within a layer (if any paramagnetic ions are present), neighbors als connected by two 90 degree pathways (via oxgyen atoms above AND below the plane)
     # These shifts are temperature dependent (perhaps stoich-induced structurally too), so may be changed somewhat
     # Can add any atom name from initialize_lattice.py
     # NOTE: The geometry of these two bond angles in the geometry convention used here is described with index shifts below in this function
@@ -68,6 +73,17 @@ def get_all_nmr_shifts(
         [-1, 0, 2],
     ]
 
+    # address shifts for metals in the same layer (note that these are all 90 degree shifts by nature of the geometry)
+    # NOTE: every site here is connected by TWO independent pathways (via the oxygen atoms above and below the metal plane)
+    idx_shifts_inlayer = [
+        [0, 1, 0],
+        [0, 0, 1],
+        [0, 0, -1],
+        [0, 1, -1],
+        [0, -1, 0],
+        [0, -1, 1],
+    ]
+
     # Get indices of Li locations from the species list (should be the only +1, but being careful to use only atom names in NMR code)
     # NOTE: this includes both nominal Li layer and nominal TM layer
     indices = np.where(whole_lattice_species == "Li")
@@ -86,7 +102,6 @@ def get_all_nmr_shifts(
             )
             # get name of neighbor atom:
             neighbor_name = whole_lattice_species[neighbor_index]
-
             one_TM_neighbor_shift = nmr_shifts_dict_90s.get(neighbor_name, 0)
             tot_nmr_shift_this_Li += one_TM_neighbor_shift
 
@@ -100,8 +115,19 @@ def get_all_nmr_shifts(
             )
             # get name of neighbor atom:
             neighbor_name = whole_lattice_species[neighbor_index]
-
             one_TM_neighbor_shift = nmr_shifts_dict_180s.get(neighbor_name, 0)
+            tot_nmr_shift_this_Li += one_TM_neighbor_shift
+
+        for idx_shift in idx_shifts_inlayer:
+            # get whole index from index shift:
+            neighbor_index = (
+                (i + idx_shift[0]) % num_li_plus_tm_layers,
+                (j + idx_shift[1]) % lattice_width,
+                (k + idx_shift[2]) % lattice_width,
+            )
+            # get name of neighbor atom:
+            neighbor_name = whole_lattice_species[neighbor_index]
+            one_TM_neighbor_shift = nmr_shifts_dict_inlayer.get(neighbor_name, 0)
             tot_nmr_shift_this_Li += one_TM_neighbor_shift
 
         all_nmr_shifts.append(tot_nmr_shift_this_Li)

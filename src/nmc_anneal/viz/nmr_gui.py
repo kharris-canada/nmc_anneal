@@ -48,9 +48,25 @@ class PeakFitGUI(QWidget):
         self.init_ui()
         self.update_plot()
 
+    """
+    Initialize the interactive peak fitting GUI.
+
+    Sets up the UI with control panels for spectrum parameters and a matplotlib canvas
+    for visualization.
+
+    Args:
+        datasets (dict[str, tuple]): Dictionary mapping dataset names to (shifts, intensities) tuples.
+    """
+
     # ---------------- UI ----------------
 
     def init_ui(self):
+        """
+        Construct the user interface for the peak fitting tool.
+
+        Creates parameter adjustment widgets (Gaussian %, FWHM, resolution, zoom controls)
+        and a matplotlib canvas displaying the NMR spectrum.
+        """
         main_layout = QHBoxLayout(self)
 
         grid = QGridLayout()
@@ -209,16 +225,33 @@ class PeakFitGUI(QWidget):
     # ----- Save Zoom state ----
 
     def _get_current_view(self):
-        """Return current axis limits (used to preserve zoom)."""
+        """
+        Get current plot axis limits.
+
+        Returns:
+            tuple: (xlim, ylim) where each is a tuple of (min, max) for that axis.
+        """
         return self.ax.get_xlim(), self.ax.get_ylim()
 
     def _restore_view(self, xlim, ylim):
-        """Restore axis limits after redraw."""
+        """
+        Restore previous plot axis limits.
+
+        Args:
+            xlim (tuple): (xmin, xmax) limits for x-axis.
+            ylim (tuple): (ymin, ymax) limits for y-axis.
+        """
         self.ax.set_xlim(xlim)
         self.ax.set_ylim(ylim)
 
     # ---------------- Plot ----------------
     def update_plot(self):
+        """
+        Regenerate and redraw the NMR spectrum plot.
+
+        Recalculates the spectrum using current parameter values, applies vertical scaling
+        and offset, and redisplays with preserved zoom level.
+        """
         xlim, ylim = self._get_current_view()
         names = list(self.datasets.keys())
         shifts, intensities = self.datasets[names[0]]
@@ -252,6 +285,13 @@ class PeakFitGUI(QWidget):
 
     # ---------------- Zoom ----------------
     def on_zoom_select(self, eclick, erelease):
+        """
+        Handle rectangular zoom selection on the plot.
+
+        Args:
+            eclick (matplotlib.backend_bases.MouseEvent): Mouse click event at corner 1.
+            erelease (matplotlib.backend_bases.MouseEvent): Mouse release event at corner 2.
+        """
         if eclick.xdata is None or erelease.xdata is None:
             return
 
@@ -263,10 +303,21 @@ class PeakFitGUI(QWidget):
         self.canvas.draw_idle()
 
     def on_mouse_press(self, event):
+        """
+        Handle mouse press events (double-click resets zoom).
+
+        Args:
+            event (matplotlib.backend_bases.MouseEvent): Mouse event data.
+        """
         if event.dblclick:
             self.reset_zoom()
 
     def reset_zoom(self):
+        """
+        Reset the plot axes to show full spectrum range.
+
+        Autoscales both axes to fit all data and respects the parameter bounds.
+        """
         self.ax.autoscale()
         curr_xmax = np.maximum(self.xmax, self.xmax_box.value())
         curr_xmin = np.minimum(self.xmin, self.xmin_box.value())
@@ -276,6 +327,15 @@ class PeakFitGUI(QWidget):
 
 # does a quick rough scaling of experimental dataset get close to first simulation
 def _scale_data(datasets):
+    """
+    Automatically scale experimental data to roughly match simulation intensities.
+
+    Computes vertical scaling factor from the simulation and applies it to experimental data
+    for better visual comparison.
+
+    Args:
+        datasets (dict[str, tuple]): Mutable dictionary of datasets. Modifies the experimental dataset in-place.
+    """
     dataset_names = list(datasets.keys())
     data_to_model = datasets[dataset_names[0]]
     num_of_sites = sum(data_to_model[1])

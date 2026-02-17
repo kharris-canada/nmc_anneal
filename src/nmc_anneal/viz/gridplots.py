@@ -13,15 +13,18 @@ def plot_energy_convergence_grid(
     outfile: str,
 ):
     """
-    Plot 3x3 grid for up to 8 plots (last grid box for printing global parameters)
-    trajectories : list[np.ndarray]
-        Each array is the energy trajectory (one value per 1% step)
-    step_counts : list[int]
-        Total MC steps for each trajectory (config.curr_conv_check_n_steps)
-    final_avg_energies : list[float]
-        Average energy over last 5% for each trajectory
-    outfile : str
-        Output filename (.png or .pdf)
+    Plot energy convergence trajectories in a 3x3 grid with run parameters.
+
+    Creates a 3x3 grid of subplots showing energy evolution for up to 8 annealing runs.
+    The 9th panel displays key simulation parameters.
+
+    Args:
+        config (SimulationConfig): Configuration object with simulation parameters.
+        anneal_type (str): Label for the type of annealing performed.
+        trajectories (list[np.ndarray]): Energy trajectories (sampled at 1% intervals).
+        step_counts (list[int]): Total Monte Carlo steps for each trajectory.
+        final_avg_energies (list[float]): Average energy over final 5% for each trajectory.
+        outfile (str): Path to output PNG or PDF file.
     """
     nrows = 3
     ncols = 3

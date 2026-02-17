@@ -8,6 +8,17 @@ def plot_2Dlattice(
     filename: str = "2Dlattice.pdf",
     atom_radius: float = 0.45,
 ):
+    """
+    Visualize a 2D lattice of atomic charges as colored circles.
+
+    Creates a hexagonal lattice visualization where each atom is represented by a colored
+    circle. Colors are mapped based on the atomic charge values.
+
+    Args:
+        data_array (np.ndarray): 2D array of integer charges to visualize.
+        filename (str): Output image filename (.pdf or other matplotlib format). Defaults to "2Dlattice.pdf".
+        atom_radius (float): Radius of each atom circle in plot coordinates. Defaults to 0.45.
+    """
     color_map = {
         -2: "firebrick",
         0: "black",

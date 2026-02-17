@@ -23,28 +23,23 @@ def get_phase_diagram(
     sim_end_temp: float,
 ):
     """
-    Reads in: parameters and existing lattice (expected to match SimulationConfig variables)
-    Anneals multiple runs along the temperature trajectory and generates a plot of the energies vs temperature
-    Could be run in cold-to-hot or hot-to-cold direction
+    Generate a phase diagram by annealing at multiple temperatures.
 
-    NOTE: you can view the output pdf as it runs
+    Performs multiple annealing runs across a temperature range and plots average oxygen
+    energy vs. temperature. Useful for understanding thermal behavior and phase transitions.
 
-    :param config: Dict style data class containing most simulation parameters. See parser.py
-    :type config: SimulationConfig
-    :param whole_lattice_charges: Array containing all charges in structure in the correct geometry. Formatted as in initialize_lattice.py.
-    :type whole_lattice_charges: np.ndarray
-    :param whole_lattice_species: Description
-    :type whole_lattice_species: Array containing names of all ions in structure in the correct geometry. Formatted as in initialize_lattice.py.
-    :param output_filename: Name of file to write graphic to (name.pdf|name.png)
-    :type output_filename: str
-    :param anneal_type: Which layer types to anneal (TM Convergence Check|Li Convergence Check)
-    :type anneal_type: str
-    :param n_steps_perT: Number of simulated annealing steps between temperatures
-    :type n_steps_perT: float
-    :param sim_start_temp: Simulated annealing start T
-    :type sim_start_temp: float
-    :param sim_end_temp: Simulated annealing ending T
-    :type sim_end_temp: float
+    Args:
+        config (SimulationConfig): Simulation parameters.
+        whole_lattice_charges (ChargesLattice): Initial charges lattice.
+        whole_lattice_species (SpeciesLattice): Initial species lattice.
+        output_filename (str): Path to output PDF file.
+        anneal_type (str): "TM Convergence Check" or "Li Convergence Check".
+        n_steps_perT (float): Number of annealing steps at each temperature.
+        sim_start_temp (float): Starting temperature for the scan.
+        sim_end_temp (float): Ending temperature for the scan.
+
+    Raises:
+        ValueError: If anneal_type is invalid.
     """
 
     VALID_ANNEAL_TYPES = {
@@ -98,15 +93,15 @@ def _plot_temp_trajectories(
     output_filename: str, energy_trajectories: list, temp_axis: list
 ):
     """
-    Make a dot-style plot  of energy vs temperature with several overlapping replicate runs
-    plus a red line showing the average trajectory.
+    Plot energy vs. temperature for multiple replicate runs with mean trajectory.
 
-    :param output_filename: Name of file to write graphic to (name.pdf|name.png)
-    :type output_filename: str
-    :param energy_trajectories: list containing the energies measured at each temperatures
-    :type energy_trajectories: list
-    :param temp_axis: List of the actual temperatures simulations run on
-    :type temp_axis: list
+    Creates a scatter plot of individual replicate measurements (black dots) overlaid with
+    the mean energy trajectory (red line).
+
+    Args:
+        output_filename (str): Path to output PDF or PNG file.
+        energy_trajectories (list[np.ndarray]): List of energy arrays, one per replicate run.
+        temp_axis (list[float]): Temperature values corresponding to each energy measurement.
     """
 
     energy_trajectories_arr = np.asarray(energy_trajectories)

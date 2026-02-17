@@ -9,6 +9,21 @@ import numpy as np
 
 
 def _pseudo_voigt(x, x0, fwhm, eta):
+    """
+    Calculate the pseudo-Voigt lineshape at given x-coordinates.
+
+    Blends Gaussian and Lorentzian profiles: (eta * Gaussian) + ((1-eta) * Lorentzian).
+
+    Args:
+        x (np.ndarray): X-coordinates where lineshape is evaluated.
+        x0 (float): Center position of the peak.
+        fwhm (float): Full-width at half-maximum of the peak.
+        eta (float): Blending parameter (0=pure Lorentzian, 1=pure Gaussian).
+
+    Returns:
+        np.ndarray: Lineshape values at the given x-coordinates.
+    """
+
     if fwhm <= 0:
         return np.zeros_like(x)
 
@@ -71,35 +86,26 @@ def image_from_peaklist(
     xmax=700,
 ):
     """
-    Generate and save a summed pseudo-Voigt spectrum.
+    Generate a 7Li NMR spectrum and save it as an image file.
 
-    Parameters
-    ----------
-    data : tuple (shifts, intensities)
-        shifts : array-like
-        intensities : array-like (same length as shifts)
+    Creates a pseudo-Voigt NMR spectrum from peak data and saves it as a high-quality
+    image with inverted x-axis per NMR convention.
 
-    percent_gaussian : float
-        Gaussian fraction (0–100)
+    Args:
+        data (tuple[np.ndarray, np.ndarray]): (shifts, intensities) tuple.
+        percent_gaussian (float): Gaussian fraction of lineshape (0-100).
+        fwhm_at_zero (float): Linewidth (FWHM) at zero shift in ppm.
+        fwhm_linear_scale (float): Additional broadening per ppm of offset.
+        output_filename (str): Output filename (.png or .pdf).
+        n_points (int): Resolution of generated spectrum. Defaults to 4000.
+        xmin (float): Lower bound in ppm. Defaults to -300.
+        xmax (float): Upper bound in ppm. Defaults to 700.
 
-    fwhm_at_zero : float
-        Peak FWHM at shift = 0
+    Returns:
+        tuple[np.ndarray, np.ndarray]: (x_ppm, intensity) arrays of the generated spectrum.
 
-    fwhm_linear_scale : float
-        Linear broadening coefficient:
-        FWHM(shift) = fwhm_at_zero + fwhm_linear_scale * |shift|
-
-    output_filename : str
-        File name ending in .png or .pdf
-
-    n_points : int
-        Resolution of generated spectrum
-
-    xmin : float
-        right hand side of figure
-
-    xmax : float
-        left hand side of figure
+    Raises:
+        ValueError: If shifts and intensities have different lengths or output filename has wrong extension.
     """
 
     shifts, intensities = data

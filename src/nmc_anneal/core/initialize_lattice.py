@@ -81,13 +81,17 @@ def _populate_li_layer(
     config: SimulationConfig, rng: np.random.Generator
 ) -> SpeciesLattice:
     """
+    Generate a single lithium layer with specified stoichiometry and random atomic positions.
+
+    Creates a 2D layer populated with Li, Mn, Ni2+, Ni3+, and vacancy species according to the
+    fractional occupancies specified in the configuration.
 
     Args:
-        config (SimulationConfig): Dict style data class containing most simulation parameters. See parser.py
-        rng (np.random.Generator): random number generator that gets passed on to next layer of initialization process
+        config (SimulationConfig): Data class containing simulation parameters, including lithium layer composition fractions.
+        rng (np.random.Generator): Random number generator for shuffling atomic positions.
 
     Returns:
-        np.ndarray: Array with one lithium layer at the specified stoichiometry and random atomic positions
+        SpeciesLattice: 2D array of species labels for a single lithium layer with shape (width, width).
     """
     width = config.width
     n_sites = width * width
@@ -114,14 +118,18 @@ def _populate_li_layer(
 def _populate_tm_layer(
     config: SimulationConfig, rng: np.random.Generator
 ) -> SpeciesLattice:
-    """_summary_
+    """
+    Generate a single transition metal layer with specified stoichiometry and random atomic positions.
+
+    Creates a 2D layer populated with Li, Mn, Ni2+, Ni3+, Co3+, and vacancy species according to the
+    fractional occupancies specified in the configuration.
 
     Args:
-        config (SimulationConfig): Dict style data class containing most simulation parameters. See parser.py
-        rng (np.random.Generator): random number generator to use when picking positions
+        config (SimulationConfig): Data class containing simulation parameters, including TM layer composition fractions.
+        rng (np.random.Generator): Random number generator for shuffling atomic positions.
 
     Returns:
-        np.ndarray:Array with one transition metal layer at the specified stoichiometry and random atomic positions
+        SpeciesLattice: 2D array of species labels for a single transition metal layer with shape (width, width).
     """
     width = config.width
     n_sites = width * width
@@ -152,15 +160,21 @@ def _counts_from_fractions(
     layer: str,
 ) -> list[int]:
     """
-    Convert fractions into integer site counts.
+    Convert fractional occupancies to integer atom counts.
+
+    Rounds fractions to integers and corrects for rounding errors by adjusting lithium (Li layer)
+    or cobalt (TM layer) counts to ensure all sites are filled.
 
     Args:
-        n_sites (int): Total atomic sites required
-        fractions (list[float]): list of fraction of total atomic number of each species
-        layer (str): transition metal or lithium layer
+        n_sites (int): Total number of atomic sites to fill.
+        fractions (list[float]): List of fractional occupancies for each species (must sum to ~1.0).
+        layer (str): Layer type identifier: "li" for lithium layer or "TM" for transition metal layer.
 
     Returns:
-        list[int]: integer list of number of each atom type (uses simple list order rather than labels to keep track of species)
+        list[int]: Integer atom counts for each species (order matches input fractions).
+
+    Raises:
+        ValueError: If rounding corrections cannot fill all sites.
     """
     counts = [int(round(f * n_sites)) for f in fractions]
 
@@ -194,17 +208,19 @@ def _build_layer_array(
     rng: np.random.Generator,
 ) -> SpeciesLattice:
     """
-    Generate random positions for all the species in they array called layer.
-    NOTE: doesn't have the correct 2D shape, it gets reformatted to a square later
+    Create a 1D array of species labels with random positions.
+
+    Arranges species sequentially then shuffles the array. The returned array is 1D and will be
+    reshaped into a 2D layer by the calling function.
 
     Args:
-        n_sites (int): Total atomic sites required
-        species (list[str]): Ordered list of species atomic *names* (not charges)
-        counts (list[int]): Ordered list of number of atoms of each species in the species list (!order matters!)
-        rng (np.random.Generator): random number generator to use when picking positions
+        n_sites (int): Total number of atomic sites to fill.
+        species (list[str]): Ordered list of species atomic names (must match order of counts).
+        counts (list[int]): Ordered list of atom counts for each species (order must match species list).
+        rng (np.random.Generator): Random number generator for shuffling positions.
 
     Returns:
-        np.ndarray: _description_
+        SpeciesLattice: 1D array of species labels, to be reshaped into 2D layer.
     """
     layer = np.full(n_sites, VACANCY, dtype="<U4")
 
@@ -219,13 +235,15 @@ def _build_layer_array(
 
 def _charges_from_species(species_layer: SpeciesLattice) -> ChargesLattice:
     """
-    Map species labels to default charges.
+    Map species labels to their default charge values.
+
+    Converts a layer of species names to corresponding integer charges using the SPECIES_CHARGE mapping.
 
     Args:
-        species_layer (np.ndarray): The already randomly initialized array containing one layer with the atomic species names
+        species_layer (SpeciesLattice): 2D array containing atomic species names.
 
     Returns:
-        np.ndarray: 2D layer with atomic charges matching the input species names
+        ChargesLattice: 2D array of integer charges matching the input species layer.
     """
     charges = np.zeros(species_layer.shape, dtype=np.int8)
 
@@ -239,13 +257,16 @@ def _charges_from_species(species_layer: SpeciesLattice) -> ChargesLattice:
 
 def _stoich_to_namestring(config: SimulationConfig) -> str:
     """
-    Inspects the stoichiometry described in the config data class object and converts it to an easily readable empirical formula
+    Generate an empirical formula string from the stoichiometry specified in the configuration.
+
+    Combines Li-layer and TM-layer compositions into a readable formula with subscripts.
+    Uses LaTeX formatting for proper mathematical notation.
 
     Args:
-        config (SimulationConfig): Dict style data class containing most simulation parameters. See parser.py
+        config (SimulationConfig): Data class containing composition fractions for all species.
 
     Returns:
-        str: empirical formula in standard format
+        str: Empirical formula with LaTeX-formatted subscripts and charges.
     """
     parts = []
 

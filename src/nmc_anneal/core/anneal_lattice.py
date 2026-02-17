@@ -22,20 +22,23 @@ def anneal_3Dlattice(
     graph_energy: bool = False,
 ) -> list[float]:
     """
-    Handles passing lattice and parameters to parallel set of anneal_2D() processes and collating results
-    - passes one 3-layer-sandwich of lattice to each process
-    - each annealing process returns one layer, so these are interweaved with 'spectator' layers
-    results are stored directly into whole_lattice_XXX rather than returned
+    Perform parallel annealing on layers of a 3D lattice structure.
+
+    Slices the lattice into 3-layer sandwiches and anneals the center layer of each via
+    parallel processes. Results are stored directly into the input lattice arrays.
 
     Args:
-        config (SimulationConfig): Dict style data class containing most simulation parameters. See parser.py
-        whole_lattice_charges (np.ndarray): Array containing all charges in structure in the correct geometry. Formatted as in initialize_lattice.py.
-        whole_lattice_species (np.ndarray): Array containing all ion names in structure in the correct geometry. Formatted as in initialize_lattice.py.
-        anneal_type (str): Define which layer to anneal and if intermediate (convergence check) or long run
-        graph_energy (bool): At the expense of moderate extra computational time, track the energy change and record it in a 1D array. Defaults to false
+        config (SimulationConfig): Data class containing simulation parameters and annealing settings.
+        whole_lattice_charges (ChargesLattice): 3D array of all charges to anneal in-place.
+        whole_lattice_species (SpeciesLattice): 3D array of all ion names to anneal in-place.
+        anneal_type (str): Type of anneal: "Initialize TM", "Anneal Li", "TM Convergence Check", or "Li Convergence Check".
+        graph_energy (bool): If True, track and return energy trajectory. Defaults to False.
 
     Returns:
-        np.ndarray: optional return of energy trajectory as numpy array if graph_energy flag is true
+        list[float]: Energy trajectory (one value per 1% of steps) if graph_energy=True, else empty list.
+
+    Raises:
+        ValueError: If anneal_type is not one of the valid options.
     """
     energies = []
     # this list is written explicitly inside the slice_up_lattice function
@@ -115,21 +118,20 @@ def _slice_up_lattice(
     graph_energy: bool = False,
 ) -> list[tuple[int, int, int, float, float, ChargesLattice, SpeciesLattice, bool]]:
     """
-        Take entire lattice and slice into 3-layer sandwiches with the layer "idx_anneal_layer" as center layer
-    anneal_type string sets whether to anneal the Li layers (those with even indices) or the TM layers (those with odd indices)
+    Slice lattice into 3-layer sandwiches and prepare annealing job parameters.
 
-     NOTE: this function is where number of steps and simulation temp parameters are set (either from input text or manual control with "curr_conv_check" variables)
+    Partitions the lattice into 3-layer sandwiches with the target layer in the center.
+    Sets annealing steps and temperature parameters based on anneal_type and config.
 
     Args:
-        config (SimulationConfig): Dict style data class containing most simulation parameters. See parser.py
-        whole_lattice_charges (np.ndarray): Array containing all charges in structure in the correct geometry. Formatted as in initialize_lattice.py.
-        whole_lattice_species (np.ndarray): Array containing all ion names in structure in the correct geometry. Formatted as in initialize_lattice.py.
-        anneal_type (str): Define which layer to anneal and if intermediate (convergence check) or long run
-        graph_energy (bool): At the expense of moderate extra computational time, track the energy change and record it in a 1D array
+        config (SimulationConfig): Data class containing simulation parameters.
+        whole_lattice_charges (ChargesLattice): 3D array of all charges with proper geometry.
+        whole_lattice_species (SpeciesLattice): 3D array of all ion names with proper geometry.
+        anneal_type (str): Type of anneal: "Initialize TM", "Anneal Li", "TM Convergence Check", or "Li Convergence Check".
+        graph_energy (bool): If True, record energy trajectory. Defaults to False.
 
     Returns:
-        tuple[int, int, int, float, float, np.ndarray, np.ndarray, np.ndarray]: A complex data package describing a run on a 3-layer subset of the whole structure.
-        see list_of_sandwiches.append command at end of this function for a description
+        list[tuple]: Each tuple contains (idx_center_layer, n_steps, lattice_width, sim_temp_hot, sim_temp_cold, lattice_charges_3L, lattice_species_3L, graph_energy).
     """
 
     # Set number of steps and temperature parameters for annealing
@@ -214,7 +216,16 @@ def _slice_up_lattice(
 
 def _anneal_2D_worker(args):
     """
-    Helper function just to dereference arguments before passing on to _anneal_2D
+    Wrapper function to dereference tuple arguments for _anneal_2D.
+
+    Unpacks a single tuple argument containing all parameters and passes them to _anneal_2D.
+    Enables use of executor.map() in ProcessPoolExecutor.
+
+    Args:
+        args (tuple): Tuple containing all parameters for _anneal_2D.
+
+    Returns:
+        tuple[int, SpeciesLattice, ChargesLattice, np.ndarray]: Result from _anneal_2D.
     """
     return _anneal_2D(*args)
 
@@ -230,23 +241,26 @@ def _anneal_2D(
     graph_energy: bool = False,
 ) -> tuple[int, SpeciesLattice, ChargesLattice, np.ndarray]:
     """
-    Reads in a 3-layer segment of whole lattice and anneals the center layer
-    - returns just the annealed layer
-    - also returns idx_anneal_layer for keeping track of where the returned annealed layer should be placed when rebuilding the whole stack
+    Perform simulated annealing on the center layer of a 3-layer sandwich.
+
+    Uses Metropolis algorithm with temperature ramp to optimize ion positions. Randomly swaps
+    ions of different charges and accepts/rejects based on energy change and current temperature.
 
     Args:
-        idx_anneal_layer (int): Center layer corresponds to layer with index idx_anneal_layer in whole lattice
-        n_steps (int): Total number of steps in annealing
-        lattice_width (int): Width of the square 2D layers
-        sim_temp_hot (float): Simulated annealing start temperature (follows profile in _temp_ramp_shape)
-        sim_temp_cold (float): Simulated annealing ending temperature (follows profile in _temp_ramp_shape)
-        whole_lattice_charges (np.ndarray): Array containing all charges in structure in the correct geometry. Formatted as in initialize_lattice.py.
-        whole_lattice_species (np.ndarray): Array containing all ion names in structure in the correct geometry. Formatted as in initialize_lattice.py.
-        graph_energy (bool, optional): At the expense of moderate extra computational time, track the energy change and record it in a 1D array. Defaults to False.
-
+        idx_anneal_layer (int): Index of the center (annealed) layer in the original lattice.
+        n_steps (int): Total number of Monte Carlo steps.
+        lattice_width (int): Width of the square 2D layers.
+        sim_temp_hot (float): Initial simulated annealing temperature.
+        sim_temp_cold (float): Final simulated annealing temperature.
+        lattice_charges (ChargesLattice): 3D array of charges for the 3-layer sandwich.
+        lattice_species (SpeciesLattice): 3D array of ion names for the 3-layer sandwich.
+        graph_energy (bool): If True, record energy at each checkpoint. Defaults to False.
 
     Returns:
-        tuple[int, np.ndarray, np.ndarray, np.ndarray]: return just the center layer (the annealed one) with its original index and optionally the energy trajectory
+        tuple[int, SpeciesLattice, ChargesLattice, np.ndarray]: (idx_anneal_layer, annealed_species_1L, annealed_charges_1L, energy_trajectory).
+
+    Raises:
+        ValueError: If graph_energy=True but n_steps < 100.
     """
 
     if graph_energy and n_steps < 100:
@@ -316,13 +330,13 @@ def _anneal_2D(
             if curr_step % checkpoint_interval == 0:
                 current_percent_idx = int(curr_step / checkpoint_interval)
                 if curr_step != n_steps:
-                    energies[current_percent_idx] = (
-                        encalc.one_metal_layer_oxygen_energies(lattice_charges)
-                    )
+                    energies[
+                        current_percent_idx
+                    ] = encalc.one_metal_layer_oxygen_energies(lattice_charges)
                 else:
-                    energies[(len(energies) - 1)] = (
-                        encalc.one_metal_layer_oxygen_energies(lattice_charges)
-                    )
+                    energies[
+                        (len(energies) - 1)
+                    ] = encalc.one_metal_layer_oxygen_energies(lattice_charges)
 
     return (
         idx_anneal_layer,
@@ -336,19 +350,19 @@ def _temp_ramp_shape(
     n_steps: int, curr_step: int, sim_temp_cold: float, sim_temp_hot: float
 ) -> float:
     """
-    Just using a simple ramp shape, can change if needed
-    Shape: flat at T_hot for first 10 percent, then linear down to T_cold during next 80% and then hold
+    Calculate the current temperature for simulated annealing at a given step.
 
-    :param n_steps: Total number of steps in annealing
-    :type n_steps: int
-    :param curr_step: Current step number
-    :type curr_step: int
-    :param sim_temp_cold: Starting temp. of annealing simulation
-    :type sim_temp_cold: float
-    :param sim_temp_hot: Ending temp. of annealing simulation
-    :type sim_temp_hot: float
-    :return: Temperature to conduct curr_step step at
-    :rtype: float
+    Implements a temperature schedule: flat at hot temperature for first 10%, linear ramp down
+    to cold temperature over next 80%, then flat at cold temperature for final 10%.
+
+    Args:
+        n_steps (int): Total number of annealing steps.
+        curr_step (int): Current step number (0 to n_steps).
+        sim_temp_cold (float): Target (minimum) temperature.
+        sim_temp_hot (float): Initial (maximum) temperature.
+
+    Returns:
+        float: Temperature to use for the current step.
     """
     flat_until = 0.10
     reaches_min = 0.80

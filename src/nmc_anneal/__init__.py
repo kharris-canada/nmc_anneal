@@ -1,4 +1,4 @@
-__version__ = "0.3.4"
+__version__ = "0.6.0"
 
 from .core.anneal_lattice import anneal_3Dlattice
 from .core.charging_methods import delithiate
