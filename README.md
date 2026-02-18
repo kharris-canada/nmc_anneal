@@ -58,8 +58,9 @@ nmc.anneal_3Dlattice(config, charges, species)
 
 ## Example Output
 The software produces:
-Convergence diagnostics
-* Phase and charge distributions
+* Convergence diagnostics
+* Phase diagrams
+* Structure images
 * Synthetic NMR spectra
 * Structure files for further analysis
 Example figures are available in the examples/ directory.
@@ -72,19 +73,21 @@ Example figures are available in the examples/ directory.
 * Local lithium environments are used to generate synthetic ⁷Li MAS NMR spectra
 
 ## Package Structure
+```
 nmc_anneal/
-│
-├── core/        # lattice, energy, annealing
-├── analysis/    # convergence, phase, NMR
-├── viz/         # plotting and GUI tools
-├── io/          # input parsing and configuration
-└── tests/       # automated tests
+    ├── core/       # lattice, energy, annealing
+    ├── analysis/   # convergence, phase, NMR
+    ├── viz/        # plotting and GUI tools
+    ├── io/         # input parsing and configuration
+    └── tests/      # automated tests
+```
+
 
 ## Performance
 Typical simulations of a moderate lattice (e.g., 30×30×4) converge in minutes on a modern laptop. The process takes advantage of the natural translational symmetry for parallel computation in the vertical direction. Best performance will be found when the number of layers is equal to the number of available CPU cores.
 
 ## Reproducibility
-Simulations are deterministic when a random seed is specified in the configuration file.
+Simulations are deterministic when a random seed is specified in the configuration file. Energies and average structures are also reproducible in the ergodic limit.
 
 ## Documentation
 More detailed documentation is available in the docs/ directory:
@@ -95,8 +98,7 @@ More detailed documentation is available in the docs/ directory:
 * API reference
 
 ## Citation
-If you use this software in an academic work, please cite:
-*Structure Solution of Metal-Oxide Li Battery Cathodes from Simulated Annealing and Lithium NMR Spectroscopy* K. J. Harris, J. M. Foster, M. Z. Tessaro, M. Jiang, X. Yang, Y. Wu, B. Protas, and G. R. Goward *Chem. Mater.* 29, 5550−5557, **2017**.
+The algorithms in this package are a large expansion of the method published in *Structure Solution of Metal-Oxide Li Battery Cathodes from Simulated Annealing and Lithium NMR Spectroscopy* K. J. Harris, J. M. Foster, M. Z. Tessaro, M. Jiang, X. Yang, Y. Wu, B. Protas, and G. R. Goward *Chem. Mater.* 29, 5550−5557, **2017**. Please cite that work if you make use of this code in an academic paper.
 
 ## Requirements
 * Python ≥ 3.10
@@ -115,7 +117,6 @@ Before submitting a pull request:
 ## Roadmap
 Planned future features include:
 * Pair distribution function (PDF) analysis
-* Diffraction simulation
 * Automated fitting to experimental NMR spectra
 * Expanded visualization tools
 
@@ -125,6 +126,6 @@ MIT License
 
 ## Project Status
 This project is under active development and is currently focused on:
-* Core simulation stability
+* Core simulation algorithm options
 * Scientific validation
 * Expanded analysis and visualization tools
