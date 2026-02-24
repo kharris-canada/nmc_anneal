@@ -1,9 +1,20 @@
+"""Configuration data class for simulation parameters.
+
+Defines the SimulationConfig data class which holds all parameters needed to
+specify an NMC lattice structure, oxidation model, and annealing procedure.
+"""
+
 from dataclasses import dataclass
 from pathlib import Path
 
 
 @dataclass(frozen=False)
 class SimulationConfig:
+    """
+    Class to contain all the global parameters of the system for simulation.
+    Fot safest practice, only set via io.parser which does validation.
+    """
+
     # Lattice is tilted square of width^2 atoms, n_layers of TM (oxygen and li layers for periodicity implied)
     width: int
     n_layers: int

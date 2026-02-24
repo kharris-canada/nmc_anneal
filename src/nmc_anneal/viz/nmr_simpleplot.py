@@ -1,11 +1,14 @@
+"""Generate and plot NMR spectra from lithium shift distributions.
+
+Provides functions to synthesize NMR spectra by convolving discrete lithium shifts
+with line shape profiles (pseudo-Voigt), supporting both experimental spectral
+generation and interactive GUI-based spectrum fitting.
+"""
+
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-
-# ============================================================
-# -----------------  SPECTRUM GENERATOR  ----------------------
-# ============================================================
 
 
 def _pseudo_voigt(x, x0, fwhm, eta):

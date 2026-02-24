@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import nmc_anneal as nmc
-from nmc_anneal.viz.latt_to_img import plot_2Dlattice
+from nmc_anneal.viz import plot_2Dlattice
 
 
 def main() -> None:

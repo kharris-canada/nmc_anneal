@@ -1,3 +1,10 @@
+"""Generate phase diagrams of NMC structures across delithiation states.
+
+Computes and visualizes how lattice energies evolve as lithium is progressively
+removed from the structure, exploring the phase space of oxidation states and
+structural configurations as a function of lithium content.
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy.typing import NDArray

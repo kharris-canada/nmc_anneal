@@ -1,3 +1,10 @@
+"""Visualize 2D lattice structures as atoms on a hexagonal lattice.
+
+Renders 2D lattice configurations as hexagonal lattice diagrams with atoms
+represented by colored circles, where color encodes atomic charge values for
+quick visual inspection of charge distributions.
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import Circle

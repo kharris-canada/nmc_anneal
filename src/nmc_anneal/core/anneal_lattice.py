@@ -1,3 +1,10 @@
+"""Simulated annealing algorithm for finding low-energy lattice configurations.
+
+Implements parallel simulated annealing to optimize atomic positions and charges
+within NMC lattice layers, exploring configuration space while minimizing total energy.
+Supports multiple independent annealing runs with temperature ramping schedules.
+"""
+
 import math
 import random
 from concurrent.futures import ProcessPoolExecutor
@@ -330,13 +337,13 @@ def _anneal_2D(
             if curr_step % checkpoint_interval == 0:
                 current_percent_idx = int(curr_step / checkpoint_interval)
                 if curr_step != n_steps:
-                    energies[current_percent_idx] = (
-                        encalc.one_metal_layer_oxygen_energies(lattice_charges)
-                    )
+                    energies[
+                        current_percent_idx
+                    ] = encalc.one_metal_layer_oxygen_energies(lattice_charges)
                 else:
-                    energies[(len(energies) - 1)] = (
-                        encalc.one_metal_layer_oxygen_energies(lattice_charges)
-                    )
+                    energies[
+                        (len(energies) - 1)
+                    ] = encalc.one_metal_layer_oxygen_energies(lattice_charges)
 
     return (
         idx_anneal_layer,

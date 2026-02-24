@@ -1,3 +1,10 @@
+"""Generate initial NMC lattice structures with random atomic positions.
+
+Provides functions to initialize species and charge lattices according to
+specified stoichiometry and composition. Supports Li and transition metal layers
+with configurable fractional occupancies.
+"""
+
 import numpy as np
 from numpy.typing import NDArray
 

@@ -1,3 +1,10 @@
+"""Convert crystal structures to NMR spectroscopy observables.
+
+Calculates lithium NMR chemical shifts based on local charge environments
+around each Li atom, grouping and counting shift degeneracies to generate
+spectroscopic signatures comparable to experimental NMR data.
+"""
+
 import numpy as np
 from numpy.typing import NDArray
 

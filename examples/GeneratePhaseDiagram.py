@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import nmc_anneal as nmc
-from nmc_anneal.analysis.get_phase_diagram import get_phase_diagram
+from nmc_anneal.analysis import get_phase_diagram
 
 
 def main() -> None:

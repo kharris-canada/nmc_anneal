@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import nmc_anneal as nmc
-from nmc_anneal.analysis.convergence_check import find_and_plot_convergence
+from nmc_anneal.analysis import find_and_plot_convergence
 
 
 def main() -> None:

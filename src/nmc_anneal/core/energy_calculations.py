@@ -1,3 +1,10 @@
+"""Calculate electrostatic energies for atoms in NMC structures.
+
+Provides functions to compute metal redox energies and oxygen layer energies
+based on Coulomb interactions between charged atoms in the 3D lattice structure.
+Accounts for periodic boundary conditions and oxygen sublattice positions.
+"""
+
 import numpy as np
 from numpy.typing import NDArray
 

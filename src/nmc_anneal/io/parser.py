@@ -1,3 +1,10 @@
+"""Parse text configuration files into SimulationConfig data classes.
+
+Reads key=value format configuration files with support for comments and blank lines,
+converting string values to appropriate types and validating ranges for lattice
+parameters, composition fractions, and annealing settings.
+"""
+
 from __future__ import annotations
 
 from pathlib import Path

@@ -1,3 +1,9 @@
+"""Utilities for plotting simulation results in grid layouts.
+
+Provides functions to display multiple energy convergence trajectories in
+formatted grid subplots with run parameters and labels for comparative analysis.
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 

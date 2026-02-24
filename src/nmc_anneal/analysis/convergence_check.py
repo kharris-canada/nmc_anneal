@@ -1,3 +1,10 @@
+"""Monitor convergence of annealing simulations across multiple runs.
+
+Provides utilities to run multiple annealing iterations with increasing step counts,
+track energy convergence, and visualize convergence behavior in grid plots to
+identify sufficient annealing duration.
+"""
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -41,10 +48,12 @@ def find_and_plot_convergence(
 
     Raises:
         ValueError: If fraction_max_steps_list has more than 8 elements or if anneal_type is invalid.
+
     """
+
     if len(fraction_max_steps_list) > 8:
         raise ValueError(
-            "Automatic plotting of convergence only works for up to 9 simulation lengths. "
+            "Automatic plotting of convergence only works for up to 8 simulation lengths. "
         )
 
     VALID_ANNEAL_TYPES = {

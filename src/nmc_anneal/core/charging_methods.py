@@ -1,3 +1,11 @@
+"""Manage lithium removal and transition metal oxidation redox reactions.
+
+Provides the main delithiate() function to remove lithium atoms from the structure
+and oxidize transition metals while maintaining charge balance. Includes helper
+functions to compute redox energies, select lowest-energy sites, and update
+energy lists during the redox process.
+"""
+
 import numpy as np
 from numpy.typing import NDArray
 

@@ -1,3 +1,11 @@
+"""Interactive GUI for NMR spectrum analysis and fitting.
+
+Provides a PyQt5-based graphical interface for interactive NMR spectrum fitting,
+allowing users to adjust lineshape parameters (linewidth, Lorentzian/Gaussian blend),
+view region-specific spectra, and interactively refine spectral models through
+rectangle-selector-based region selection.
+"""
+
 import sys
 
 import numpy as np
