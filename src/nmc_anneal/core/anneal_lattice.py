@@ -123,7 +123,9 @@ def _slice_up_lattice(
     whole_lattice_species: SpeciesLattice,
     anneal_type: str,
     graph_energy: bool = False,
-) -> list[tuple[int, int, int, float, float, ChargesLattice, SpeciesLattice, bool]]:
+) -> list[
+    tuple[int, int, int | None, float, float, ChargesLattice, SpeciesLattice, bool]
+]:
     """
     Slice lattice into 3-layer sandwiches and prepare annealing job parameters.
 
@@ -209,7 +211,7 @@ def _slice_up_lattice(
             (
                 idx_center_layer,
                 n_steps,
-                config.width,
+                config.random_seed,
                 sim_temp_hot,
                 sim_temp_cold,
                 lattice_3L_charges,
@@ -240,7 +242,7 @@ def _anneal_2D_worker(args):
 def _anneal_2D(
     idx_anneal_layer: int,
     n_steps: int,
-    lattice_width: int,
+    random_seed: int,
     sim_temp_hot: float,
     sim_temp_cold: float,
     lattice_charges: ChargesLattice,
@@ -269,6 +271,9 @@ def _anneal_2D(
     Raises:
         ValueError: If graph_energy=True but n_steps < 100.
     """
+    if random_seed is not None:
+        random.seed(random_seed + idx_anneal_layer)
+    lattice_width = lattice_charges.shape[1]
 
     if graph_energy and n_steps < 100:
         raise ValueError(
@@ -337,13 +342,13 @@ def _anneal_2D(
             if curr_step % checkpoint_interval == 0:
                 current_percent_idx = int(curr_step / checkpoint_interval)
                 if curr_step != n_steps:
-                    energies[
-                        current_percent_idx
-                    ] = encalc.one_metal_layer_oxygen_energies(lattice_charges)
+                    energies[current_percent_idx] = (
+                        encalc.one_metal_layer_oxygen_energies(lattice_charges)
+                    )
                 else:
-                    energies[
-                        (len(energies) - 1)
-                    ] = encalc.one_metal_layer_oxygen_energies(lattice_charges)
+                    energies[(len(energies) - 1)] = (
+                        encalc.one_metal_layer_oxygen_energies(lattice_charges)
+                    )
 
     return (
         idx_anneal_layer,

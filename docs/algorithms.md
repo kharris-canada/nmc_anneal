@@ -27,8 +27,7 @@ Energy is computed from deviations in local oxygen charge balance.
 For each oxygen coordination:
 
 - Sum neighboring cation charges
-- Compare to ideal neutrality
-- Add quadratic penalty
+- Generate penalty from comparison to ideal neutrality
 
 Only local updates are required after each swap, enabling efficient computation.
 
@@ -44,7 +43,7 @@ Lithium removal proceeds deterministically:
 4. Update local charge environment
 5. Repeat
 
-This produces physically meaningful lithium ordering evolution.
+This produces physically meaningful lithium ordering evolution. Only sites local to those involved in a move need updating at each step.
 
 ---
 

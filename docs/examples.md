@@ -73,7 +73,7 @@ The number of steps required depends on the atoms present as well as the size of
 Example:
 ```python
 
-from nmc_anneal.analysis.convergence_check import find_and_plot_convergence   # requires matplotlib
+from nmc_anneal.analysis import find_and_plot_convergence   # requires matplotlib
 
 find_and_plot_convergence(
     config,
@@ -93,7 +93,7 @@ Results:
 ## Observing Phase Transitions
 Since the real world versions of these materials are generally quickly quenched from their high synthesis temperature, one is generally interested in tracking the behavior at different levels of disorder. It can be useful to generate a phase diagram with:
 ```python
-from nmc_anneal.analysis.get_phase_diagram import get_phase_diagram # requires matplotlib
+from nmc_anneal.analysis import get_phase_diagram       # requires matplotlib
 
 get_phase_diagram(
     config,
@@ -116,9 +116,9 @@ The amount of lithium atoms (and corresponding electrons) to remove are specifie
 Example:
 
 ```python
-import nmc_anneal.core.charging_methods as cm
+import nmc_anneal as nmc
 
-cm.delithiate(
+nmc.delithiate(
     config,
     whole_lattice_charges,
     whole_lattice_species,
@@ -131,7 +131,7 @@ The chemical shift in ppm for each type of neighboring metal atom must be specif
 
 Example:
 ```python
-from nmc_anneal.analysis.struct2nmr import get_all_nmr_shifts
+from nmc_anneal.analysis import get_all_nmr_shifts
 
 nmr_shifts_dict_90s = {
         "Mn": 255,
@@ -161,8 +161,7 @@ The digital list of peak positions can be converted to a full NMR spectrum by pa
 
 Example:
 ```python
-
-from nmc_anneal.viz.nmr_simpleplot import image_from_peaklist # requires matplotlib
+from nmc_anneal.viz import image_from_peaklist      # requires matplotlib
 
 image_from_peaklist(
     data=nmr_ppm_shifts,
@@ -185,7 +184,7 @@ Result:
 You can also iteratively adjust the linewidth parameters through comparison to an experimental spectrum (stored as a numpy arrays for intensity and axis) using run_peak_gui():
 
 ```python
-import nmc_anneal.viz.nmr_gui as NMRplot  # requires PyQT
+from nmc_anneal.viz import run_peak_gui
 
 data = np.load("examples/artifical_experimental_7LiNMR.npz")
 exp_ppm_axis = data["ppm_axis"]

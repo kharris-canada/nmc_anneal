@@ -2,7 +2,7 @@
 
 ## Overview
 
-The **nmc_anneal** package models layered nickel–manganese–cobalt (NMC) lithium-ion battery cathodes at the atomistic level. The approach focuses on local charge balance and short-range interactions to reproduce experimentally observed disorder, lithium ordering, and spectroscopic signatures.
+The **nmc_anneal** package models layered nickel–manganese–cobalt (NMC) lithium-ion battery cathodes at the atomistic level. The approach focuses on local charge balance and short-range interactions to reproduce experimentally observed disorder, lithium ordering, and spectroscopic signatures. The theory is an extension of our earlier work presented in Harris et al., *Chem. Mater.* 2017 to include three dimensions and include delithiation.
 
 ---
 

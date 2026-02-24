@@ -1,7 +1,5 @@
 # nmc_anneal
 
-# nmc_anneal
-
 **Physics-informed lattice annealing for modeling cation disorder, phase behavior, and electrochemical states in layered oxide materials.**
 
 ---
@@ -190,7 +188,8 @@ The algorithms in this package are a large expansion of the method published in 
 
 
 ## Contributions
-Contributions are welcome.
+Contributions are welcome. Either via writing your own code or suggesting alternative model physics to enact.
+
 Before submitting a pull request:
 * Run formatting: ```black .```
 * Run linting: ```ruff check .```
